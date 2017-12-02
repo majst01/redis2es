@@ -1,16 +1,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/olivere/elastic"
 )
 
 type redisClient struct {
 	key  string
 	pool *redis.Pool
+	ec   *elastic.Client
 }
 
 func newPool(host string, port int, db int, password string, usetls, tlsskipverify bool) *redis.Pool {
@@ -48,6 +51,29 @@ func newPool(host string, port int, db int, password string, usetls, tlsskipveri
 	}
 }
 
+func (r *redisClient) index(name, bodyJSON string) error {
+	exists, err := r.ec.IndexExists(name).Do(context.Background())
+	if err != nil {
+		return fmt.Errorf("index:%s cannot be checked:%v", name, err)
+	}
+	if !exists {
+		createIndex, err := r.ec.CreateIndex(name).Do(context.Background())
+		if err != nil {
+			return fmt.Errorf("cannot create index:%s %v", name, err)
+		}
+		if !createIndex.Acknowledged {
+			return fmt.Errorf("create index:%s was not acknowledged", name)
+		}
+	}
+
+	writeIndex, err := r.ec.Index().Index(name).Type("log").BodyJson(bodyJSON).Do(context.Background())
+	if err != nil {
+		return fmt.Errorf("cannot add %s to index %s err:%v", bodyJSON, name, err)
+	}
+	fmt.Printf("indexed: id:%s index:%s type:%s\n", writeIndex.Id, writeIndex.Index, writeIndex.Type)
+	return nil
+}
+
 func (r *redisClient) read() (string, error) {
 	c := r.pool.Get()
 	defer c.Close()
@@ -67,6 +93,10 @@ func (r *redisClient) selectKey(msg redis.PMessage) {
 			fmt.Printf("err:%v\n", err)
 		}
 		fmt.Printf("got:%s\n", v)
+		err = r.index("logstash-today", v)
+		if err != nil {
+			fmt.Printf("err:%v\n", err)
+		}
 	}
 }
 
@@ -97,14 +127,22 @@ func (r *redisClient) consume() error {
 
 func main() {
 	redisPool := newPool("127.0.0.1", 6379, 0, "", false, false)
+	client, err := elastic.NewSimpleClient(elastic.SetURL("http://127.0.0.1:9200"))
+	if err != nil {
+		// Handle error
+		panic(err)
+	}
+	defer client.Stop()
 
 	rc := &redisClient{
 		pool: redisPool,
 		key:  "logstash",
+		ec:   client,
 	}
 
-	err := rc.consume()
+	err = rc.consume()
 	if err != nil {
 		fmt.Printf("error:%v", err)
 	}
+
 }
