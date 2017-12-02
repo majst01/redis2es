@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -51,26 +52,21 @@ func (r *redisClient) read() (string, error) {
 	c := r.pool.Get()
 	defer c.Close()
 
-	var v string
-
-	reply, err := redis.Values(c.Do("LPOP", r.key))
+	v, err := redis.String(c.Do("LPOP", r.key))
 	if err != nil {
 		return "", fmt.Errorf("error getting key: %s with: %v", r.key, err)
-	}
-	if _, err := redis.Scan(reply, &v); err != nil {
-		return "", fmt.Errorf("error scanning result from: %s with: %v", r.key, err)
 	}
 
 	return v, nil
 }
 
 func (r *redisClient) selectKey(msg redis.PMessage) {
-	if string(msg.Data) == r.key {
+	if string(msg.Data) == r.key && strings.HasSuffix(string(msg.Channel), "rpush") {
 		v, err := r.read()
 		if err != nil {
-			fmt.Printf("err:%v", err)
+			fmt.Printf("err:%v\n", err)
 		}
-		fmt.Printf("got:%s", v)
+		fmt.Printf("got:%s\n", v)
 	}
 }
 
