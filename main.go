@@ -7,7 +7,12 @@ import (
 	"time"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/json-iterator/go"
 	"github.com/olivere/elastic"
+)
+
+var (
+	json = jsoniter.ConfigCompatibleWithStandardLibrary
 )
 
 type redisClient struct {
@@ -51,6 +56,32 @@ func newPool(host string, port int, db int, password string, usetls, tlsskipveri
 	}
 }
 
+func (r *redisClient) filter(input string) (string, string, error) {
+	contractName := "catchall"
+	data := make(map[string]interface{})
+	err := json.UnmarshalFromString(input, &data)
+	if err != nil {
+		return "", contractName, fmt.Errorf("cannot decode data:%v", err)
+	}
+
+	// check if contract in any case is present, lowercase then
+	for k, v := range data {
+		if strings.ToLower(k) == "contract" {
+			oldValue := strings.ToLower(v.(string))
+			delete(data, k)
+			data["contract"] = oldValue
+			contractName = oldValue
+		}
+	}
+
+	result, err := json.MarshalToString(&data)
+	if err != nil {
+		return "", contractName, fmt.Errorf("cannot encode data:%v", err)
+	}
+	return result, contractName, nil
+
+}
+
 func (r *redisClient) index(name, bodyJSON string) error {
 	exists, err := r.ec.IndexExists(name).Do(context.Background())
 	if err != nil {
@@ -64,6 +95,7 @@ func (r *redisClient) index(name, bodyJSON string) error {
 		if !createIndex.Acknowledged {
 			return fmt.Errorf("create index:%s was not acknowledged", name)
 		}
+		fmt.Printf("index:%s created\n", name)
 	}
 
 	writeIndex, err := r.ec.Index().Index(name).Type("log").BodyJson(bodyJSON).Do(context.Background())
@@ -93,7 +125,12 @@ func (r *redisClient) selectKey(msg redis.PMessage) {
 			fmt.Printf("err:%v\n", err)
 		}
 		fmt.Printf("got:%s\n", v)
-		err = r.index("logstash-today", v)
+
+		filteredJSON, contractName, err := r.filter(v)
+		if err != nil {
+			fmt.Printf("err:%v\n", err)
+		}
+		err = r.index(fmt.Sprintf("logstash-%s-%d-%d-%d", contractName, time.Now().Year(), time.Now().Month(), time.Now().Day()), filteredJSON)
 		if err != nil {
 			fmt.Printf("err:%v\n", err)
 		}
