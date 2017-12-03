@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/garyburd/redigo/redis"
 	"github.com/olivere/elastic"
 )
@@ -62,23 +64,31 @@ func (r *redisClient) read() (string, error) {
 	return v, nil
 }
 
-func (r *redisClient) selectKey(msg redis.PMessage) {
-	if string(msg.Data) == r.key && strings.HasSuffix(string(msg.Channel), "rpush") {
-		v, err := r.read()
-		if err != nil {
-			fmt.Printf("err:%v\n", err)
-		}
-		fmt.Printf("got:%s\n", v)
-
-		filteredJSON, contractName, err := filter(v)
-		if err != nil {
-			fmt.Printf("err:%v\n", err)
-		}
-		err = r.index(fmt.Sprintf("logstash-%s-%d-%d-%d", contractName, time.Now().Year(), time.Now().Month(), time.Now().Day()), filteredJSON)
-		if err != nil {
-			fmt.Printf("err:%v\n", err)
-		}
+func (r *redisClient) readFilterAndIndex(msg redis.PMessage) error {
+	if string(msg.Data) != r.key {
+		return nil
 	}
+	if !strings.HasSuffix(msg.Channel, "rpush") {
+		return nil
+	}
+
+	v, err := r.read()
+	if err != nil {
+		return err
+	}
+	log.WithFields(log.Fields{
+		"content": v,
+	}).Debug("read:")
+
+	filteredJSON, contractName, err := filter(v)
+	if err != nil {
+		return err
+	}
+	err = r.index(fmt.Sprintf("logstash-%s-%d-%d-%d", contractName, time.Now().Year(), time.Now().Month(), time.Now().Day()), filteredJSON)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *redisClient) consume() error {
@@ -87,16 +97,36 @@ func (r *redisClient) consume() error {
 	psc := redis.PubSubConn{Conn: c}
 	c.Do("CONFIG", "SET", "notify-keyspace-events", "KEA")
 
-	psc.PSubscribe("__key*__:*")
+	err := psc.PSubscribe("__key*__:*")
+	if err != nil {
+		return fmt.Errorf("unable to create subscription:%v", err)
+	}
 	for {
 		switch msg := psc.Receive().(type) {
 		case redis.Message:
-			fmt.Printf("Message: %s %s\n", msg.Channel, msg.Data)
+			log.WithFields(log.Fields{
+				"channel": msg.Channel,
+				"data":    msg.Data,
+			}).Debug("consume: message")
+
 		case redis.PMessage:
-			fmt.Printf("PMessage: p:%s c:%s d:%s\n", msg.Pattern, msg.Channel, msg.Data)
-			r.selectKey(msg)
+			log.WithFields(log.Fields{
+				"channel": msg.Channel,
+				"data":    msg.Data,
+				"pattern": msg.Pattern,
+			}).Debug("consume: pmessage")
+			err = r.readFilterAndIndex(msg)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("consume:")
+			}
 		case redis.Subscription:
-			fmt.Printf("Subscription: %s %s %d\n", msg.Kind, msg.Channel, msg.Count)
+			log.WithFields(log.Fields{
+				"kind":    msg.Kind,
+				"channel": msg.Channel,
+				"count":   msg.Count,
+			}).Debug("consume: subscription")
 			if msg.Count == 0 {
 				// return
 			}

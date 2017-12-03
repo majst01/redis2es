@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func (r *redisClient) index(name, bodyJSON string) error {
@@ -18,13 +20,14 @@ func (r *redisClient) index(name, bodyJSON string) error {
 		if !createIndex.Acknowledged {
 			return fmt.Errorf("create index:%s was not acknowledged", name)
 		}
-		fmt.Printf("index:%s created\n", name)
+		log.WithFields(log.Fields{"created index:": name}).Debug("index:")
 	}
 
 	writeIndex, err := r.ec.Index().Index(name).Type("log").BodyJson(bodyJSON).Do(context.Background())
 	if err != nil {
 		return fmt.Errorf("cannot add %s to index %s err:%v", bodyJSON, name, err)
 	}
-	fmt.Printf("indexed: id:%s index:%s type:%s\n", writeIndex.Id, writeIndex.Index, writeIndex.Type)
+	log.WithFields(log.Fields{"id": writeIndex.Id, "index": writeIndex.Index, "type": writeIndex.Type}).Debug("index:")
+
 	return nil
 }
