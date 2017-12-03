@@ -77,13 +77,17 @@ func (r *redisClient) readFilterAndIndex(msg redis.PMessage) error {
 		return err
 	}
 	log.WithFields(log.Fields{
-		"content": v,
+		"original content": v,
 	}).Debug("read:")
 
 	filteredJSON, contractName, err := filter(v)
 	if err != nil {
 		return err
 	}
+	log.WithFields(log.Fields{
+		"filtered content": filteredJSON,
+	}).Debug("read:")
+
 	err = r.index(fmt.Sprintf("logstash-%s-%d-%d-%d", contractName, time.Now().Year(), time.Now().Month(), time.Now().Day()), filteredJSON)
 	if err != nil {
 		return err
