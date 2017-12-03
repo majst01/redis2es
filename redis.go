@@ -108,29 +108,15 @@ func (r *redisClient) consume() error {
 	for {
 		switch msg := psc.Receive().(type) {
 		case redis.Message:
-			log.WithFields(log.Fields{
-				"channel": msg.Channel,
-				"data":    msg.Data,
-			}).Debug("consume: message")
-
+			log.WithFields(log.Fields{"channel": msg.Channel, "data": msg.Data}).Debug("consume: message")
 		case redis.PMessage:
-			log.WithFields(log.Fields{
-				"channel": msg.Channel,
-				"data":    msg.Data,
-				"pattern": msg.Pattern,
-			}).Debug("consume: pmessage")
+			log.WithFields(log.Fields{"channel": msg.Channel, "data": msg.Data, "pattern": msg.Pattern}).Debug("consume: pmessage")
 			err = r.readFilterAndIndex(msg)
 			if err != nil {
-				log.WithFields(log.Fields{
-					"err": err,
-				}).Error("consume:")
+				log.WithFields(log.Fields{"err": err}).Error("consume:")
 			}
 		case redis.Subscription:
-			log.WithFields(log.Fields{
-				"kind":    msg.Kind,
-				"channel": msg.Channel,
-				"count":   msg.Count,
-			}).Debug("consume: subscription")
+			log.WithFields(log.Fields{"kind": msg.Kind, "channel": msg.Channel, "count": msg.Count}).Debug("consume: subscription")
 			if msg.Count == 0 {
 				// return
 			}
