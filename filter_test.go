@@ -8,15 +8,15 @@ import (
 
 func TestFilter(t *testing.T) {
 	input := "{\"key\":\"value\"}"
-	output, contract, err := filter(input)
+	output, err := filter(input)
 	assert.Nil(t, err, "no error is expected")
-	assert.Equal(t, "catchall", contract, "contract may never be empty")
+	assert.Contains(t, output.indexName, "catchall", "index must contain catchall")
 	assert.NotEqual(t, "\"key\":\"value\",\"contract\":\"catchall\"", output, "output may never be empty")
 
 	input = "{\"key\":\"value\", \"Contract\":\"TestContract\"}"
-	output, contract, err = filter(input)
+	output, err = filter(input)
 	assert.Nil(t, err, "no error is expected")
-	assert.Equal(t, "testcontract", contract)
+	assert.Contains(t, output.indexName, "testcontract", "index must contain testcontract")
 	assert.NotEqual(t, "\"key\":\"value\",\"contract\":\"testcontract\"", output, "output may never be empty")
 
 }
@@ -24,7 +24,7 @@ func TestFilter(t *testing.T) {
 func BenchmarkFilter(b *testing.B) {
 	input := "{\"key\":\"value\", \"Contract\":\"TestContract\"}"
 	for i := 0; i < b.N; i++ {
-		_, _, err := filter(input)
+		_, err := filter(input)
 		if err != nil {
 			assert.Fail(b, "%v", err)
 		}
