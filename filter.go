@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"path/filepath"
 	"plugin"
 	"time"
 
@@ -40,29 +40,32 @@ func init() {
 	// add builtin filters
 	filters = append(filters, ContractFilter{})
 
-	// load module
-	// 1. open the so file to load the symbols
-	plugin, err := plugin.Open("./filter/uppercase/uppercase_keys_filter.so")
+	files, err := filepath.Glob("./*_filter.so")
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.WithFields(log.Fields{"cannot open filters": err}).Error("filter:")
 	}
-	// 2. look up a symbol (an exported function or variable)
-	// in this case, variable Greeter
-	uppercase, err := plugin.Lookup("FilterPlugin")
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	for _, file := range files {
+		// load module
+		// 1. open the so file to load the symbols
+		plugin, err := plugin.Open(file)
+		if err != nil {
+			log.WithFields(log.Fields{"opening filter failed": file}).Error("filter:")
+		}
+		// 2. look up a symbol (an exported function or variable)
+		// in this case, variable Greeter
+		module, err := plugin.Lookup("FilterPlugin")
+		if err != nil {
+			log.WithFields(log.Fields{"FilterPlugin not detected": file}).Error("filter:")
+		}
 
-	// 3. Assert that loaded symbol is of a desired type
-	// in this case interface type Greeter (defined above)
-	ucf, ok := uppercase.(FilterPlugin)
-	if !ok {
-		fmt.Println("unexpected type from module symbol")
-		os.Exit(1)
+		// 3. Assert that loaded symbol is of a desired type
+		filter, ok := module.(FilterPlugin)
+		if !ok {
+			log.WithFields(log.Fields{"FilterPlugin interface not detected": file}).Error("filter:")
+		}
+		log.WithFields(log.Fields{"filter shared lib": file, "filtername": filter.Name()}).Info("filter:")
+		filters = append(filters, filter)
 	}
-	filters = append(filters, ucf)
 }
 
 func filter(input string) (*FilterStream, error) {
