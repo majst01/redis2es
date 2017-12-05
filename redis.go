@@ -76,17 +76,13 @@ func (r *redisClient) readFilterAndIndex(msg redis.PMessage) error {
 	if err != nil {
 		return err
 	}
-	log.WithFields(log.Fields{
-		"original content": v,
-	}).Debug("read:")
+	log.WithFields(log.Fields{"original content": v}).Debug("read:")
 
 	filtered, err := filter(v)
 	if err != nil {
 		return err
 	}
-	log.WithFields(log.Fields{
-		"filtered content": filtered.json,
-	}).Debug("read:")
+	log.WithFields(log.Fields{"filtered content": filtered.json}).Debug("read:")
 
 	err = r.index(filtered.indexName, filtered.json)
 	if err != nil {
