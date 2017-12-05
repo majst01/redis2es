@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"plugin"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -20,22 +22,51 @@ type FilterStream struct {
 
 // Filter modifies the input, which is a map representation of the json received
 // to a output map or errors out.
-type Filter interface {
+type FilterPlugin interface {
 	Name() string
 	Filter(input *FilterStream) (*FilterStream, error)
 }
 
 var (
-	json = jsoniter.ConfigCompatibleWithStandardLibrary
+	json    = jsoniter.ConfigCompatibleWithStandardLibrary
+	filters []FilterPlugin
 )
 
-func filters() []Filter {
-	f := []Filter{}
-	f = append(f, ContractFilter{})
-	return f
+func init() {
+	log.WithFields(log.Fields{"init": "initialize filters"}).Info("filter:")
+	// TODO find all filter plugins and add them to a list
+
+	filters = []FilterPlugin{}
+	// add builtin filters
+	filters = append(filters, ContractFilter{})
+
+	// load module
+	// 1. open the so file to load the symbols
+	plugin, err := plugin.Open("./filter/uppercase/uppercase_keys_filter.so")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	// 2. look up a symbol (an exported function or variable)
+	// in this case, variable Greeter
+	uppercase, err := plugin.Lookup("FilterPlugin")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// 3. Assert that loaded symbol is of a desired type
+	// in this case interface type Greeter (defined above)
+	ucf, ok := uppercase.(FilterPlugin)
+	if !ok {
+		fmt.Println("unexpected type from module symbol")
+		os.Exit(1)
+	}
+	filters = append(filters, ucf)
 }
 
 func filter(input string) (*FilterStream, error) {
+	fmt.Printf("filters:%d\n", len(filters))
 	start := time.Now()
 	data := make(map[string]interface{})
 	err := json.UnmarshalFromString(input, &data)
@@ -48,8 +79,9 @@ func filter(input string) (*FilterStream, error) {
 	}
 
 	// check if contract in any case is present, lowercase then
-	for _, f := range filters() {
+	for _, f := range filters {
 		s := time.Now()
+		log.WithFields(log.Fields{"call filter:": f.Name()}).Debug("filter:")
 		stream, err = f.Filter(stream)
 		if err != nil {
 			log.WithFields(log.Fields{"error": err}).Error("filter:")
