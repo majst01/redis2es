@@ -20,7 +20,7 @@ type FilterStream struct {
 	indexName string
 }
 
-// Filter modifies the input, which is a map representation of the json received
+// FilterPlugin modifies the input, which is a map representation of the json received
 // to a output map or errors out.
 type FilterPlugin interface {
 	Name() string
@@ -69,7 +69,6 @@ func init() {
 }
 
 func filter(input string) (*FilterStream, error) {
-	fmt.Printf("filters:%d\n", len(filters))
 	start := time.Now()
 	data := make(map[string]interface{})
 	err := json.UnmarshalFromString(input, &data)
