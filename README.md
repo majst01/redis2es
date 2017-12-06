@@ -1,5 +1,10 @@
 # Redis to Elasticsearch
 
+[![Build Status](https://travis-ci.org/majst01/redis2es.svg?branch=master)](hhttps://travis-ci.org/majst01/redis2es)
+[![codecov](https://codecov.io/gh/majst01/redis2es/branch/master/graph/badge.svg)](https://codecov.io/gh/majst01/redis2es)
+[![Go Report Card](https://goreportcard.com/badge/majst01/redis2es)](https://goreportcard.com/report/github.com/majst01/redis2es)
+
+
 In order to ship logs from applications to a cluster of elasticsearch servers, most of the time a combination of redis and logstash is in place.
 Redis is used to decouple write load from receive performance of elastic.
 Logstash is in place to filter the incoming logs with certain criteria.
@@ -44,3 +49,7 @@ Configuration is done by environment variables, available variables are:
 | REDIS_TLSSKIPVERIFY | if usetls is set verify certificates           | false          |
 | ELASTIC_URLS        | the comma seperated urls of the elastic servers| "127.0.0.1:9200"|
 
+## Filters
+
+Filters can be implemented in go and loaded on startup with the go plugin mechanism.
+For a start look at the sample plugin here [uppercase](filter/uppercase)
