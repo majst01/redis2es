@@ -71,11 +71,16 @@ func init() {
 func filter(input string) (*FilterStream, error) {
 	start := time.Now()
 	data := make(map[string]interface{})
-	err := json.UnmarshalFromString(input, &data)
 	stream := &FilterStream{
 		payload:   data,
 		indexName: fmt.Sprintf("logstash-catchall-%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day()),
+		json:      input,
 	}
+	if len(filters) == 0 {
+		log.Debug("filter: no filters defined, returning original")
+		return stream, nil
+	}
+	err := json.UnmarshalFromString(input, &data)
 	if err != nil {
 		return stream, fmt.Errorf("cannot decode data:%v", err)
 	}
