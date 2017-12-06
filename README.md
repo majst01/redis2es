@@ -1,6 +1,6 @@
 # Redis to Elasticsearch
 
-[![Build Status](https://travis-ci.org/majst01/redis2es.svg?branch=master)](hhttps://travis-ci.org/majst01/redis2es)
+[![Build Status](https://travis-ci.org/majst01/redis2es.svg?branch=master)](https://travis-ci.org/majst01/redis2es)
 [![codecov](https://codecov.io/gh/majst01/redis2es/branch/master/graph/badge.svg)](https://codecov.io/gh/majst01/redis2es)
 [![Go Report Card](https://goreportcard.com/badge/majst01/redis2es)](https://goreportcard.com/report/github.com/majst01/redis2es)
 
