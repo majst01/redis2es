@@ -27,51 +27,43 @@ func init() {
 	}
 }
 
+func getStringEnv(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value != "" {
+		return defaultValue
+	}
+	return value
+}
+
+func getIntEnv(key string, defaultValue int) int {
+	value := os.Getenv(key)
+	if value != "" {
+		v, err := strconv.Atoi(value)
+		if err == nil {
+			return v
+		}
+	}
+	return defaultValue
+}
+func getBoolEnv(key string, defaultValue bool) bool {
+	value := os.Getenv(key)
+	if value != "" {
+		v, err := strconv.ParseBool(value)
+		if err == nil {
+			return v
+		}
+	}
+	return defaultValue
+}
+
 func main() {
-	redisKey := "logstash"
-	if os.Getenv("REDIS_KEY") != "" {
-		redisKey = os.Getenv("REDIS_KEY")
-	}
-	redisHost := "127.0.0.1"
-	if os.Getenv("REDIS_HOST") != "" {
-		redisHost = os.Getenv("REDIS_HOST")
-	}
-	redisPort := 6379
-	if os.Getenv("REDIS_Port") != "" {
-		port, err := strconv.Atoi(os.Getenv("REDIS_PORT"))
-		if err != nil {
-			log.WithFields(log.Fields{"REDIS_PORT is not numeric": err}).Error("main:")
-		}
-		redisPort = port
-	}
-	redisDB := 0
-	if os.Getenv("REDIS_DB") != "" {
-		db, err := strconv.Atoi(os.Getenv("REDIS_DB"))
-		if err != nil {
-			log.WithFields(log.Fields{"REDIS_DB is not numeric": err}).Error("main:")
-		}
-		redisDB = db
-	}
-	redisPassword := ""
-	if os.Getenv("REDIS_PASSWORD") != "" {
-		redisPassword = os.Getenv("REDIS_PASSWORD")
-	}
-	redisUseTLS := false
-	if os.Getenv("REDIS_USETLS") != "" {
-		useTLS, err := strconv.ParseBool(os.Getenv("REDIS_USETLS"))
-		if err != nil {
-			log.WithFields(log.Fields{"REDIS_USETLS is not a bool": err}).Error("main:")
-		}
-		redisUseTLS = useTLS
-	}
-	redisTLSSkipverify := false
-	if os.Getenv("REDIS_TLSSKIPVERIFY") != "" {
-		skiverify, err := strconv.ParseBool(os.Getenv("REDIS_TLSSKIPVERIFY"))
-		if err != nil {
-			log.WithFields(log.Fields{"REDIS_TLSSKIPVERIFY is not a bool": err}).Error("main:")
-		}
-		redisTLSSkipverify = skiverify
-	}
+	redisKey := getStringEnv("REDIS_KEY", "logstash")
+	redisHost := getStringEnv("REDIS_HOST", "127.0.0.1")
+	redisPort := getIntEnv("REDIS_PORT", 6379)
+	redisDB := getIntEnv("REDIS_DB", 0)
+	redisPassword := getStringEnv("REDIS_PASSWORD", "")
+	redisUseTLS := getBoolEnv("REDIS_USETLS", false)
+	redisTLSSkipverify := getBoolEnv("REDIS_TLSSKIPVERIFY", false)
 
 	redisPool := newPool(redisHost, redisPort, redisDB, redisPassword, redisUseTLS, redisTLSSkipverify)
 
