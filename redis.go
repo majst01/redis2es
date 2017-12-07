@@ -12,9 +12,12 @@ import (
 )
 
 type redisClient struct {
-	key  string
-	pool *redis.Pool
-	ec   *elastic.Client
+	key       string
+	pool      *redis.Pool
+	ec        *elastic.Client
+	indexes   map[string]*elastic.BulkService
+	documents chan document
+	bulkSize  int
 }
 
 func newPool(host string, port int, db int, password string, usetls, tlsskipverify bool) *redis.Pool {
@@ -83,8 +86,11 @@ func (r *redisClient) readFilterAndIndex(msg redis.PMessage) error {
 		return err
 	}
 	log.WithFields(log.Fields{"filtered content": filtered.json}).Debug("read:")
-
-	err = r.index(filtered.indexName, filtered.json)
+	doc := document{
+		indexName: filtered.indexName,
+		body:      filtered.json,
+	}
+	r.documents <- doc
 	if err != nil {
 		return err
 	}

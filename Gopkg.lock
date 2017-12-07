@@ -20,6 +20,12 @@
   version = "1.0.4"
 
 [[projects]]
+  name = "github.com/kelseyhightower/envconfig"
+  packages = ["."]
+  revision = "f611eb38b3875cc3bd991ca91c51d06446afa14c"
+  version = "v1.3.0"
+
+[[projects]]
   name = "github.com/olivere/elastic"
   packages = ["."]
   revision = "79ff368708b3a2a9da641dc831d95fd0782bf4ef"
@@ -70,6 +76,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "63fc2eb5f0b2038dfde14fb5f77111103674c46ed8c7293e9602160f3bf5ee92"
+  inputs-digest = "8934242556bc9dcf651a42fa143df213a600a52082c545f1862dd96ba41406d0"
   solver-name = "gps-cdcl"
   solver-version = 1

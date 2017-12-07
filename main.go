@@ -19,6 +19,12 @@ type Specification struct {
 	UseTLS        bool     `default:"false"`
 	TLSSkipVerify bool     `default:"false"`
 	ElasticURLs   []string `default:"http://127.0.0.1:9200"`
+	BulkSize      int      `default:"1000"`
+}
+
+type document struct {
+	indexName string
+	body      string
 }
 
 func init() {
@@ -53,12 +59,17 @@ func main() {
 	}
 	defer client.Stop()
 
+	documents := make(chan document)
 	rc := &redisClient{
-		pool:    redisPool,
-		key:     spec.Key,
-		ec:      client,
-		indexes: make(map[string]*elastic.BulkService),
+		pool:      redisPool,
+		key:       spec.Key,
+		ec:        client,
+		indexes:   make(map[string]*elastic.BulkService),
+		documents: documents,
+		bulkSize:  spec.BulkSize,
 	}
+
+	go rc.index()
 
 	err = rc.consume()
 	if err != nil {
