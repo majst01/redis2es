@@ -2,13 +2,24 @@ package main
 
 import (
 	"os"
-	"strconv"
-	"strings"
 
+	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/olivere/elastic"
 )
+
+// Specification of all configuration needed.
+type Specification struct {
+	Key           string `default:"logstash"`
+	Host          string `default:"127.0.0.1"`
+	Port          int    `default:"6379"`
+	DB            int    `default:"0"`
+	Password      string
+	UseTLS        bool     `default:"false"`
+	TLSSkipVerify bool     `default:"false"`
+	ElasticURLs   []string `default:"http://127.0.0.1:9200"`
+}
 
 func init() {
 	// Log as JSON instead of the default ASCII formatter.
@@ -27,60 +38,26 @@ func init() {
 	}
 }
 
-func getStringEnv(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value != "" {
-		return defaultValue
-	}
-	return value
-}
-
-func getIntEnv(key string, defaultValue int) int {
-	value := os.Getenv(key)
-	if value != "" {
-		v, err := strconv.Atoi(value)
-		if err == nil {
-			return v
-		}
-	}
-	return defaultValue
-}
-func getBoolEnv(key string, defaultValue bool) bool {
-	value := os.Getenv(key)
-	if value != "" {
-		v, err := strconv.ParseBool(value)
-		if err == nil {
-			return v
-		}
-	}
-	return defaultValue
-}
-
 func main() {
-	redisKey := getStringEnv("REDIS_KEY", "logstash")
-	redisHost := getStringEnv("REDIS_HOST", "127.0.0.1")
-	redisPort := getIntEnv("REDIS_PORT", 6379)
-	redisDB := getIntEnv("REDIS_DB", 0)
-	redisPassword := getStringEnv("REDIS_PASSWORD", "")
-	redisUseTLS := getBoolEnv("REDIS_USETLS", false)
-	redisTLSSkipverify := getBoolEnv("REDIS_TLSSKIPVERIFY", false)
-
-	redisPool := newPool(redisHost, redisPort, redisDB, redisPassword, redisUseTLS, redisTLSSkipverify)
-
-	elasticURLs := []string{"http://127.0.0.1:9200"}
-	if os.Getenv("ELASTIC_URLS") != "" {
-		elasticURLs = strings.Split(os.Getenv("ELASTIC_URLS"), ",")
+	var spec Specification
+	err := envconfig.Process("redis2es", &spec)
+	if err != nil {
+		log.Fatal(err.Error())
 	}
-	client, err := elastic.NewSimpleClient(elastic.SetURL(elasticURLs...))
+
+	redisPool := newPool(spec.Host, spec.Port, spec.DB, spec.Password, spec.UseTLS, spec.TLSSkipVerify)
+
+	client, err := elastic.NewSimpleClient(elastic.SetURL(spec.ElasticURLs...))
 	if err != nil {
 		log.WithFields(log.Fields{"error connecting to elastic": err}).Error("main:")
 	}
 	defer client.Stop()
 
 	rc := &redisClient{
-		pool: redisPool,
-		key:  redisKey,
-		ec:   client,
+		pool:    redisPool,
+		key:     spec.Key,
+		ec:      client,
+		indexes: make(map[string]*elastic.BulkService),
 	}
 
 	err = rc.consume()
