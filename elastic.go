@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"time"
 
@@ -52,11 +51,13 @@ func (r *redisClient) getBulks() []*elastic.BulkService {
 	return bulks
 }
 
-func (r *redisClient) index() {
+func (r *redisClient) index(documents chan document) {
+	// FIXME configurable ticker
 	ticker := time.NewTicker(time.Millisecond * 2000)
 	for {
 		select {
-		case doc := <-r.documents:
+		case doc := <-documents:
+			start := time.Now()
 			log.Debug("index: %v", doc)
 			bulk, err := r.getBulk(doc.indexName)
 			id := base64.URLEncoding.EncodeToString([]byte(doc.body))
@@ -71,10 +72,11 @@ func (r *redisClient) index() {
 					log.Error(err)
 				} else if res.Errors {
 					// Look up the failed documents with res.Failed(), and e.g. recommit
-					log.Error(errors.New("bulk commit failed"))
+					log.Error(fmt.Errorf("bulk commit failed errors:%v", res.Failed()))
 				}
 				log.Debug("index: bulk insert res:", res)
 				// "bulk" is reset after Do, so you can reuse it
+				log.WithFields(log.Fields{"duration": time.Now().Sub(start)}).Info("index: event bulk:")
 			}
 			if err != nil {
 				log.Error(fmt.Errorf("cannot add %s to index %s err:%v", doc.body, doc.indexName, err))
@@ -83,8 +85,10 @@ func (r *redisClient) index() {
 		case <-ticker.C:
 			// iterate over all bulkers
 			log.Debug("index: ticker to bulk insert")
+			start := time.Now()
 			for _, bulk := range r.getBulks() {
-				if bulk.NumberOfActions() < 1 {
+				count := bulk.NumberOfActions()
+				if count < 1 {
 					continue
 				}
 				res, err := bulk.Do(context.Background())
@@ -92,9 +96,10 @@ func (r *redisClient) index() {
 					log.Error(err)
 				} else if res.Errors {
 					// Look up the failed documents with res.Failed(), and e.g. recommit
-					log.Error(errors.New("bulk commit failed"))
+					log.Error(fmt.Errorf("bulk commit failed errors:%v", res.Failed()))
 				}
 				log.Debug("index: bulk insert res:", res)
+				log.WithFields(log.Fields{"duration": time.Now().Sub(start), "count": count}).Info("index: tick bulk:")
 			}
 		}
 	}

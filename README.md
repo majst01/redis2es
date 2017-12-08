@@ -34,20 +34,22 @@ fluent-bit/logstash --> stunnel --> redis <-- redis-to-elastic --> elasticsearch
 
 ## Configuration
 
-Configuration is done by environment variables, available variables are:
+This application is configured via the environment. The following environment
+variables can be used:
 
+| KEY                      | TYPE                             | DEFAULT                 | REQUIRED   | DESCRIPTION
+|--------------------------|----------------------------------|-------------------------|------------|------------
+| REDIS2ES_KEY             | String                           | logstash                | False      | the redis key where to listen to
+| REDIS2ES_HOST            | String                           | 127.0.0.1               | False      | the redis server host/ip
+| REDIS2ES_PORT            | Integer                          | 6379                    | False      | the redis server port
+| REDIS2ES_DB              | Integer                          | 0                       | False      | the redis database
+| REDIS2ES_PASSWORD        | String                           |                         | False      | the redis password
+| REDIS2ES_USETLS          | True or False                    | false                   | False      | connect to redis using tls
+| REDIS2ES_TLSSKIPVERIFY   | True or False                    | false                   | False      | if connection to redis via tls, skip tls certificate verification
+| REDIS2ES_ELASTICURLS     | Comma-separated list of String   | http://127.0.0.1:9200   | False      | the elasticsearch connection url, seperated by comma for many es servers
+| REDIS2ES_BULKSIZE        | Integer                          | 1000                    | False      | writes to elastic are done in bulks of bulkSize
+| REDIS2ES_DEBUG           | True or False                    | false                   | False      | turn on debug log
 
-| Variable            | Description                                    | Default        |
-| --------------------|------------------------------------------------|----------------|
-| DEBUG               | Enable/Disable debug logging true|false        | false          |
-| REDIS_KEY           | The key where the log entries are stored       | logstash       |
-| REDIS_HOST          | The hostname/ip of redis                       | 127.0.0.1      |
-| REDIS_Port          | the port of redis                              | 6379           |
-| REDIS_DB            | the database number of redis                   | 0              |
-| REDIS_PASSWORD      | the redis database password                    | ""             |
-| REDIS_USETLS        | use tls encryption to redis                    | false          |
-| REDIS_TLSSKIPVERIFY | if usetls is set verify certificates           | false          |
-| ELASTIC_URLS        | the comma seperated urls of the elastic servers| "127.0.0.1:9200"|
 
 ## Filters
 

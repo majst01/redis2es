@@ -9,19 +9,6 @@ import (
 	"github.com/olivere/elastic"
 )
 
-// Specification of all configuration needed.
-type Specification struct {
-	Key           string `default:"logstash"`
-	Host          string `default:"127.0.0.1"`
-	Port          int    `default:"6379"`
-	DB            int    `default:"0"`
-	Password      string
-	UseTLS        bool     `default:"false"`
-	TLSSkipVerify bool     `default:"false"`
-	ElasticURLs   []string `default:"http://127.0.0.1:9200"`
-	BulkSize      int      `default:"1000"`
-}
-
 type document struct {
 	indexName string
 	body      string
@@ -34,21 +21,22 @@ func init() {
 	// Output to stdout instead of the default stderr
 	// Can be any io.Writer, see below for File example
 	log.SetOutput(os.Stdout)
+}
 
-	if os.Getenv("DEBUG") != "" {
+func main() {
+	var spec Specification
+	envconfig.MustProcess("redis2es", &spec)
+	spec.log()
+	if len(os.Args) > 1 {
+		envconfig.Usage("redis2es", &spec)
+		os.Exit(1)
+	}
+	if spec.Debug {
 		log.WithFields(log.Fields{"debug enabled": true}).Info("main:")
 		log.SetLevel(log.DebugLevel)
 	} else {
 		log.WithFields(log.Fields{"debug disabled": true}).Info("main:")
 		log.SetLevel(log.InfoLevel)
-	}
-}
-
-func main() {
-	var spec Specification
-	err := envconfig.Process("redis2es", &spec)
-	if err != nil {
-		log.Fatal(err.Error())
 	}
 
 	redisPool := newPool(spec.Host, spec.Port, spec.DB, spec.Password, spec.UseTLS, spec.TLSSkipVerify)
@@ -59,21 +47,22 @@ func main() {
 	}
 	defer client.Stop()
 
-	documents := make(chan document)
 	rc := &redisClient{
-		pool:      redisPool,
-		key:       spec.Key,
-		ec:        client,
-		indexes:   make(map[string]*elastic.BulkService),
-		documents: documents,
-		bulkSize:  spec.BulkSize,
+		pool:     redisPool,
+		key:      spec.Key,
+		ec:       client,
+		indexes:  make(map[string]*elastic.BulkService),
+		bulkSize: spec.BulkSize,
 	}
 
-	go rc.index()
-
-	err = rc.consume()
-	if err != nil {
-		log.WithFields(log.Fields{"error": err}).Error("main:")
+	// FIXME concurency configurable
+	for i := 0; i < 10; i++ {
+		documents := make(chan document, 100)
+		go rc.index(documents)
+		go rc.consume(documents)
 	}
+	documents := make(chan document, 100)
+	go rc.index(documents)
+	rc.consume(documents)
 
 }

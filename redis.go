@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -12,12 +11,11 @@ import (
 )
 
 type redisClient struct {
-	key       string
-	pool      *redis.Pool
-	ec        *elastic.Client
-	indexes   map[string]*elastic.BulkService
-	documents chan document
-	bulkSize  int
+	key      string
+	pool     *redis.Pool
+	ec       *elastic.Client
+	indexes  map[string]*elastic.BulkService
+	bulkSize int
 }
 
 func newPool(host string, port int, db int, password string, usetls, tlsskipverify bool) *redis.Pool {
@@ -55,75 +53,46 @@ func newPool(host string, port int, db int, password string, usetls, tlsskipveri
 	}
 }
 
-func (r *redisClient) read() (string, error) {
+func (r *redisClient) readBlocking() (string, error) {
 	c := r.pool.Get()
 	defer c.Close()
 
-	v, err := redis.String(c.Do("LPOP", r.key))
+	result, err := redis.String(c.Do("BLPOP", r.key, 0))
 	if err != nil {
 		return "", fmt.Errorf("error getting key: %s with: %v", r.key, err)
 	}
-
-	return v, nil
+	return result, nil
 }
 
-func (r *redisClient) readFilterAndIndex(msg redis.PMessage) error {
-	if string(msg.Data) != r.key {
-		return nil
-	}
-	if !strings.HasSuffix(msg.Channel, "rpush") {
-		return nil
-	}
-
-	v, err := r.read()
-	if err != nil {
-		return err
-	}
-	log.WithFields(log.Fields{"original content": v}).Debug("read:")
-
-	filtered, err := filter(v)
-	if err != nil {
-		return err
-	}
-	log.WithFields(log.Fields{"filtered content": filtered.json}).Debug("read:")
-	doc := document{
-		indexName: filtered.indexName,
-		body:      filtered.json,
-	}
-	r.documents <- doc
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *redisClient) consume() error {
+func (r *redisClient) pending() int {
 	c := r.pool.Get()
 	defer c.Close()
-	psc := redis.PubSubConn{Conn: c}
-	c.Do("CONFIG", "SET", "notify-keyspace-events", "KEA")
-
-	err := psc.PSubscribe("__key*__:*")
+	v, err := redis.Int(c.Do("LLEN", r.key))
 	if err != nil {
-		return fmt.Errorf("unable to create subscription:%v", err)
+		return 0
 	}
+	return v
+}
+
+func (r *redisClient) consume(documents chan document) {
+	c := r.pool.Get()
+	defer c.Close()
+
 	for {
-		switch msg := psc.Receive().(type) {
-		case redis.Message:
-			log.WithFields(log.Fields{"channel": msg.Channel, "data": msg.Data}).Debug("consume: message")
-		case redis.PMessage:
-			log.WithFields(log.Fields{"channel": msg.Channel, "data": msg.Data, "pattern": msg.Pattern}).Debug("consume: pmessage")
-			err = r.readFilterAndIndex(msg)
-			if err != nil {
-				log.WithFields(log.Fields{"err": err}).Error("consume:")
-			}
-		case redis.Subscription:
-			log.WithFields(log.Fields{"kind": msg.Kind, "channel": msg.Channel, "count": msg.Count}).Debug("consume: subscription")
-			if msg.Count == 0 {
-				// return
-			}
-		case error:
-			return fmt.Errorf("error: %v", msg)
+		result, err := r.readBlocking()
+		if err != nil {
+			log.WithFields(log.Fields{"error from BLPOP": err}).Error("consume:")
+			continue
 		}
+		filtered, err := filter(result)
+		if err != nil {
+			log.WithFields(log.Fields{"err": err}).Error("consume:")
+			continue
+		}
+		doc := document{
+			indexName: filtered.indexName,
+			body:      filtered.json,
+		}
+		documents <- doc
 	}
 }
