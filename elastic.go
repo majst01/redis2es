@@ -53,9 +53,32 @@ func (r *redisClient) getBulks() []*elastic.BulkService {
 	return bulks
 }
 
+func (r *redisClient) flush() {
+	ticker := time.NewTicker(r.bulkTicker)
+	for {
+		select {
+		case <-ticker.C:
+			log.Debug("index: ticker to bulk insert")
+			start := time.Now()
+			for _, bulk := range r.getBulks() {
+				count := bulk.NumberOfActions()
+				if count < 1 {
+					continue
+				}
+				res, err := bulk.Do(context.Background())
+				if err != nil {
+					log.Error(err)
+				} else if res.Errors {
+					log.Error(fmt.Errorf("bulk commit failed errors:%v", res.Failed()))
+				}
+				log.Debug("index: bulk insert res:", res)
+				log.WithFields(log.Fields{"duration": time.Now().Sub(start), "count": count}).Info("index: tick bulk:")
+			}
+		}
+	}
+}
+
 func (r *redisClient) index(documents chan document) {
-	// FIXME configurable ticker
-	ticker := time.NewTicker(time.Millisecond * 2000)
 	for {
 		select {
 		case doc := <-documents:
@@ -84,23 +107,6 @@ func (r *redisClient) index(documents chan document) {
 				log.Error(fmt.Errorf("cannot add %s to index %s err:%v", doc.body, doc.indexName, err))
 			}
 			log.WithFields(log.Fields{"id": id, "index": doc.indexName}).Debug("index:")
-		case <-ticker.C:
-			log.Debug("index: ticker to bulk insert")
-			start := time.Now()
-			for _, bulk := range r.getBulks() {
-				count := bulk.NumberOfActions()
-				if count < 1 {
-					continue
-				}
-				res, err := bulk.Do(context.Background())
-				if err != nil {
-					log.Error(err)
-				} else if res.Errors {
-					log.Error(fmt.Errorf("bulk commit failed errors:%v", res.Failed()))
-				}
-				log.Debug("index: bulk insert res:", res)
-				log.WithFields(log.Fields{"duration": time.Now().Sub(start), "count": count}).Info("index: tick bulk:")
-			}
 		}
 	}
 }

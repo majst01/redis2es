@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/kelseyhightower/envconfig"
@@ -49,11 +48,12 @@ func main() {
 	defer client.Stop()
 
 	rc := &redisClient{
-		pool:     redisPool,
-		key:      spec.Key,
-		ec:       client,
-		indexes:  make(map[string]*elastic.BulkService),
-		bulkSize: spec.BulkSize,
+		pool:       redisPool,
+		key:        spec.Key,
+		ec:         client,
+		indexes:    make(map[string]*elastic.BulkService),
+		bulkSize:   spec.BulkSize,
+		bulkTicker: spec.BulkTicker,
 	}
 
 	// FIXME concurency configurable
@@ -63,5 +63,5 @@ func main() {
 		go rc.consume(documents)
 	}
 	// Stay in foreground
-	fmt.Scanln()
+	rc.flush()
 }
