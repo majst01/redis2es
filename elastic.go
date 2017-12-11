@@ -58,7 +58,7 @@ func (r *redisClient) flush() {
 	for {
 		select {
 		case <-ticker.C:
-			log.Debug("index: ticker to bulk insert")
+			log.Debug("flush: ticker to bulk insert")
 			start := time.Now()
 			for _, bulk := range r.getBulks() {
 				count := bulk.NumberOfActions()
@@ -71,8 +71,8 @@ func (r *redisClient) flush() {
 				} else if res.Errors {
 					log.Error(fmt.Errorf("bulk commit failed errors:%v", res.Failed()))
 				}
-				log.Debug("index: bulk insert res:", res)
-				log.WithFields(log.Fields{"duration": time.Now().Sub(start), "count": count}).Info("index: tick bulk:")
+				log.Debug("flush: bulk insert res:", res)
+				log.WithFields(log.Fields{"duration": time.Now().Sub(start), "count": count}).Info("flush: tick bulk:")
 			}
 		}
 	}
@@ -83,28 +83,28 @@ func (r *redisClient) index(documents chan document) {
 		select {
 		case doc := <-documents:
 			start := time.Now()
-			log.Debug("index: %v", doc)
+			log.WithFields(log.Fields{"doc": doc}).Debug("index:")
 			bulk, err := r.getBulk(doc.indexName)
+			if err != nil {
+				log.WithFields(log.Fields{"body": doc.body, "indexName": doc.indexName, "err": err}).Error("index:")
+			}
+			// FIXME id generation needed ??
 			id := base64.URLEncoding.EncodeToString([]byte(doc.body))
 			bulk.Add(elastic.NewBulkIndexRequest().Id(id).Doc(doc.body))
 
-			log.Debug("index: outstanding: ", bulk.NumberOfActions())
+			log.WithFields(log.Fields{"outstanding": bulk.NumberOfActions()}).Debug("index:")
 
 			if bulk.NumberOfActions() >= r.bulkSize {
 				// Commit
 				res, err := bulk.Do(context.Background())
 				if err != nil {
-					log.Error(err)
+					log.WithFields(log.Fields{"error": err}).Error("index: bulk commit")
 				} else if res.Errors {
-					log.Error(fmt.Errorf("bulk commit failed errors:%v", res.Failed()))
+					log.WithFields(log.Fields{"errors": res.Failed()}).Error("index: bulk commit")
 				}
-				log.Debug("index: bulk insert res:", res)
+				log.WithFields(log.Fields{"result": res}).Debug("index:", res)
 				// "bulk" is reset after Do, so you can reuse it
 				log.WithFields(log.Fields{"duration": time.Now().Sub(start)}).Info("index: event bulk:")
-			}
-			// FIXME error handling
-			if err != nil {
-				log.Error(fmt.Errorf("cannot add %s to index %s err:%v", doc.body, doc.indexName, err))
 			}
 			log.WithFields(log.Fields{"id": id, "index": doc.indexName}).Debug("index:")
 		}
