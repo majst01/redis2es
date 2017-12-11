@@ -58,11 +58,14 @@ func (r *redisClient) readBlocking() (string, error) {
 	c := r.pool.Get()
 	defer c.Close()
 
-	result, err := redis.String(c.Do("BLPOP", r.key, 0))
+	result, err := redis.Strings(c.Do("BLPOP", r.key, 0))
 	if err != nil {
-		return "", fmt.Errorf("error getting key: %s with: %v", r.key, err)
+		return "", fmt.Errorf("error getting value to key: %s with: %v", r.key, err)
 	}
-	return result, nil
+	if len(result) != 2 {
+		return "", fmt.Errorf("error getting value to key: %s, expected 2 entries, got %d", r.key, len(result))
+	}
+	return result[1], nil
 }
 
 func (r *redisClient) pending() int {
