@@ -34,12 +34,12 @@ var (
 
 func init() {
 	log.WithFields(log.Fields{"init": "initialize filters"}).Info("filter:")
-	// TODO find all filter plugins and add them to a list
 
 	filters = []FilterPlugin{}
 	// add builtin filters
 	filters = append(filters, ContractFilter{})
 
+	// find all additional filter plugins and add them to a list
 	files, err := filepath.Glob("./*_filter.so")
 	if err != nil {
 		log.WithFields(log.Fields{"cannot open filters": err}).Error("filter:")

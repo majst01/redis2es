@@ -29,6 +29,8 @@ func (r *redisClient) createIndex(name string) error {
 	return nil
 }
 
+// FIXME bulkServices only increase, garbage collect them
+// IDEA: keep creation date, remove all older on getBulk, or with separate goroutine
 func (r *redisClient) getBulk(indexName string) (*elastic.BulkService, error) {
 	var bulk *elastic.BulkService
 	if r.indexes[indexName] == nil {
@@ -71,19 +73,18 @@ func (r *redisClient) index(documents chan document) {
 				if err != nil {
 					log.Error(err)
 				} else if res.Errors {
-					// Look up the failed documents with res.Failed(), and e.g. recommit
 					log.Error(fmt.Errorf("bulk commit failed errors:%v", res.Failed()))
 				}
 				log.Debug("index: bulk insert res:", res)
 				// "bulk" is reset after Do, so you can reuse it
 				log.WithFields(log.Fields{"duration": time.Now().Sub(start)}).Info("index: event bulk:")
 			}
+			// FIXME error handling
 			if err != nil {
 				log.Error(fmt.Errorf("cannot add %s to index %s err:%v", doc.body, doc.indexName, err))
 			}
 			log.WithFields(log.Fields{"id": id, "index": doc.indexName}).Debug("index:")
 		case <-ticker.C:
-			// iterate over all bulkers
 			log.Debug("index: ticker to bulk insert")
 			start := time.Now()
 			for _, bulk := range r.getBulks() {
@@ -95,7 +96,6 @@ func (r *redisClient) index(documents chan document) {
 				if err != nil {
 					log.Error(err)
 				} else if res.Errors {
-					// Look up the failed documents with res.Failed(), and e.g. recommit
 					log.Error(fmt.Errorf("bulk commit failed errors:%v", res.Failed()))
 				}
 				log.Debug("index: bulk insert res:", res)
