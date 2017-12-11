@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/kelseyhightower/envconfig"
@@ -56,13 +57,11 @@ func main() {
 	}
 
 	// FIXME concurency configurable
-	for i := 0; i < 10; i++ {
-		documents := make(chan document, 100)
+	for i := 0; i < spec.PoolSize; i++ {
+		documents := make(chan document, 10)
 		go rc.index(documents)
 		go rc.consume(documents)
 	}
-	documents := make(chan document, 100)
-	go rc.index(documents)
-	rc.consume(documents)
-
+	// Stay in foreground
+	fmt.Scanln()
 }

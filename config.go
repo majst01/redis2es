@@ -15,6 +15,7 @@ type Specification struct {
 	TLSSkipVerify bool     `default:"false" desc:"if connection to redis via tls, skip tls certificate verification" required:"False"`
 	ElasticURLs   []string `default:"http://127.0.0.1:9200" desc:"the elasticsearch connection url, seperated by comma for many es servers" required:"False"`
 	BulkSize      int      `default:"1000" desc:"writes to elastic are done in bulks of bulkSize" required:"False"`
+	PoolSize      int      `default:"2" desc:"pool of workers to consume redis messages and write to elasticsearch" required:"False"`
 	Debug         bool     `default:"false" desc:"turn on debug log" required:"False"`
 }
 
@@ -29,6 +30,7 @@ func (s *Specification) log() {
 		"tlsskipverify": s.TLSSkipVerify,
 		"elasticurls":   s.ElasticURLs,
 		"bulksize":      s.BulkSize,
+		"poolsize":      s.PoolSize,
 		"debug":         s.Debug,
 	}).Info("config:")
 }
