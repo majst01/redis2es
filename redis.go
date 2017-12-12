@@ -96,7 +96,7 @@ func (r *redisClient) consume(documents chan document) {
 		}
 		doc := document{
 			indexName: filtered.indexName,
-			body:      filtered.json,
+			body:      filtered.jsonContent,
 		}
 		documents <- doc
 	}

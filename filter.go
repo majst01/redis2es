@@ -15,9 +15,9 @@ import (
 // future plugin api:
 // https://medium.com/learning-the-go-programming-language/writing-modular-go-programs-with-plugins-ec46381ee1a9
 type FilterStream struct {
-	payload   map[string]interface{}
-	json      string
-	indexName string
+	mapContent  map[string]interface{}
+	jsonContent string
+	indexName   string
 }
 
 // FilterPlugin modifies the input, which is a map representation of the json received
@@ -72,9 +72,9 @@ func filter(input string) (*FilterStream, error) {
 	start := time.Now()
 	data := make(map[string]interface{})
 	stream := &FilterStream{
-		payload:   data,
-		indexName: fmt.Sprintf("logstash-catchall-%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day()),
-		json:      input,
+		mapContent:  data,
+		indexName:   fmt.Sprintf("logstash-catchall-%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day()),
+		jsonContent: input,
 	}
 	if len(filters) == 0 {
 		log.Debug("filter: no filters defined, returning original")
@@ -100,7 +100,7 @@ func filter(input string) (*FilterStream, error) {
 	if err != nil {
 		return stream, fmt.Errorf("cannot encode data:%v", err)
 	}
-	stream.json = result
+	stream.jsonContent = result
 	log.WithFields(log.Fields{"totalduration": time.Now().Sub(start)}).Debug("filter:")
 	return stream, nil
 }
