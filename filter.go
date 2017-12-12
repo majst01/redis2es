@@ -36,8 +36,6 @@ func init() {
 	log.WithFields(log.Fields{"init": "initialize filters"}).Info("filter:")
 
 	filters = []FilterPlugin{}
-	// add builtin filters
-	filters = append(filters, ContractFilter{})
 
 	// find all additional filter plugins and add them to a list
 	files, err := filepath.Glob("./*_filter.so")

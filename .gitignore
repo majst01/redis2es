@@ -1,3 +1,4 @@
 vendor
 coverage*
 redis2es
+*.so
