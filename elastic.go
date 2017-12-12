@@ -87,6 +87,7 @@ func (r *redisClient) index(documents chan document) {
 			bulk, err := r.getBulk(doc.indexName)
 			if err != nil {
 				log.WithFields(log.Fields{"body": doc.body, "indexName": doc.indexName, "err": err}).Error("index:")
+				continue
 			}
 			// FIXME id generation needed ??
 			id := base64.URLEncoding.EncodeToString([]byte(doc.body))
