@@ -7,10 +7,23 @@ services:
     ports:
      - 6379:6379
 
-  elastic:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.0.0
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.0.1
     environment:
+      - http.host=0.0.0.0
+      - transport.host=127.0.0.1
       - discovery.type=single-node
+      - ELASTIC_PASSWORD=secret
     ports:
       - 9200:9200
       - 9300:9300
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.0.1
+    environment:
+      - ELASTICSEARCH_USERNAME=kibana
+      - ELASTICSEARCH_PASSWORD=secret
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
