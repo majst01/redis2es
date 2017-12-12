@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"os"
 
 	"github.com/kelseyhightower/envconfig"
@@ -31,6 +33,7 @@ func main() {
 		envconfig.Usage("redis2es", &spec)
 		os.Exit(1)
 	}
+
 	if spec.Debug {
 		log.WithFields(log.Fields{"debug enabled": true}).Info("main:")
 		log.SetLevel(log.DebugLevel)
@@ -45,15 +48,23 @@ func main() {
 	if err != nil {
 		log.WithFields(log.Fields{"error connecting to elastic": err}).Error("main:")
 	}
+	bulk, err := client.BulkProcessor().
+		Name("BackgroundWorker-1").
+		Workers(spec.PoolSize).         // number of workers
+		BulkActions(spec.BulkSize).     // commit if # requests >= 1000
+		BulkSize(2 << 20).              // commit if size of requests >= 2 MB
+		FlushInterval(spec.BulkTicker). // commit every 30s
+		Stats(true).                    // collect stats
+		Do(context.Background())
+
+	defer bulk.Close()
 	defer client.Stop()
 
 	rc := &redisClient{
-		pool:       redisPool,
-		key:        spec.Key,
-		ec:         client,
-		indexes:    make(map[string]*elastic.BulkService),
-		bulkSize:   spec.BulkSize,
-		bulkTicker: spec.BulkTicker,
+		pool:          redisPool,
+		key:           spec.Key,
+		ec:            client,
+		bulkProcessor: bulk,
 	}
 
 	// FIXME concurency configurable
@@ -62,6 +73,6 @@ func main() {
 		go rc.index(documents)
 		go rc.consume(documents)
 	}
-	// Stay in foreground
-	rc.flush()
+
+	fmt.Scanln()
 }
