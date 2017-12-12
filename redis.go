@@ -11,10 +11,11 @@ import (
 )
 
 type redisClient struct {
-	key           string
-	pool          *redis.Pool
-	ec            *elastic.Client
-	bulkProcessor *elastic.BulkProcessor
+	key            string
+	pool           *redis.Pool
+	ec             *elastic.Client
+	bulkProcessor  *elastic.BulkProcessor
+	enabledFilters []string
 }
 
 func newPool(host string, port int, db int, password string, usetls, tlsskipverify bool) *redis.Pool {

@@ -11,17 +11,18 @@ import (
 	"github.com/olivere/elastic"
 )
 
+var (
+	// EnabledFilters specifies which filters to use.
+	EnabledFilters []string
+)
+
 type document struct {
 	indexName string
 	body      string
 }
 
 func init() {
-	// Log as JSON instead of the default ASCII formatter.
 	log.SetFormatter(&log.TextFormatter{})
-
-	// Output to stdout instead of the default stderr
-	// Can be any io.Writer, see below for File example
 	log.SetOutput(os.Stdout)
 }
 
@@ -30,6 +31,10 @@ func main() {
 	envconfig.MustProcess("redis2es", &spec)
 	spec.log()
 	if len(os.Args) > 1 {
+		if os.Args[1] == "-l" {
+			log.WithFields(log.Fields{"filters": getFilters()}).Info("main:")
+			os.Exit(0)
+		}
 		envconfig.Usage("redis2es", &spec)
 		os.Exit(1)
 	}
@@ -56,23 +61,29 @@ func main() {
 		FlushInterval(spec.BulkTicker). // commit every 30s
 		Stats(true).                    // collect stats
 		Do(context.Background())
+	if err != nil {
+		log.WithFields(log.Fields{"error creating bulkprocessor": err}).Fatal("main:")
+	}
 
 	defer bulk.Close()
 	defer client.Stop()
 
 	rc := &redisClient{
-		pool:          redisPool,
-		key:           spec.Key,
-		ec:            client,
-		bulkProcessor: bulk,
+		pool:           redisPool,
+		key:            spec.Key,
+		ec:             client,
+		bulkProcessor:  bulk,
+		enabledFilters: spec.EnabledFilters,
 	}
 
-	// FIXME concurency configurable
+	rc.loadFilters()
+
 	for i := 0; i < spec.PoolSize; i++ {
 		documents := make(chan document, 10)
 		go rc.index(documents)
 		go rc.consume(documents)
 	}
 
+	// Stay in forground
 	fmt.Scanln()
 }

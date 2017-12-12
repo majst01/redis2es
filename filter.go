@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 	"plugin"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -27,22 +29,32 @@ type FilterPlugin interface {
 	Filter(input *FilterStream) (*FilterStream, error)
 }
 
-var (
-	json    = jsoniter.ConfigCompatibleWithStandardLibrary
-	filters []FilterPlugin
+const (
+	filterDirectory = "lib"
+	filterSuffix    = "_filter.so"
 )
 
-func init() {
+var (
+	json       = jsoniter.ConfigCompatibleWithStandardLibrary
+	filters    []FilterPlugin
+	filterGlob = path.Join(filterDirectory, "*"+filterSuffix)
+)
+
+func (r *redisClient) loadFilters() {
 	log.WithFields(log.Fields{"init": "initialize filters"}).Info("filter:")
 
 	filters = []FilterPlugin{}
 
 	// find all additional filter plugins and add them to a list
-	files, err := filepath.Glob("./*_filter.so")
+	files, err := filepath.Glob(filterGlob)
 	if err != nil {
 		log.WithFields(log.Fields{"cannot open filters": err}).Error("filter:")
 	}
 	for _, file := range files {
+		if !r.isFilterEnabled(file) {
+			log.WithFields(log.Fields{"filter disabled": file}).Info("filter:")
+			continue
+		}
 		// load module
 		// 1. open the so file to load the symbols
 		plugin, err := plugin.Open(file)
@@ -61,9 +73,39 @@ func init() {
 		if !ok {
 			log.WithFields(log.Fields{"FilterPlugin interface not detected": file}).Error("filter:")
 		}
-		log.WithFields(log.Fields{"filter shared lib": file, "filtername": filter.Name()}).Info("filter:")
+		log.WithFields(log.Fields{"filtername": filter.Name(), "filter shared lib": file}).Info("filter:")
 		filters = append(filters, filter)
 	}
+}
+
+func (r *redisClient) isFilterEnabled(file string) bool {
+	filtername := getFilterName(file)
+	for _, filtered := range r.enabledFilters {
+		if filtered == filtername {
+			return true
+		}
+	}
+	return false
+}
+
+func getFilterName(filename string) string {
+	base := path.Base(filename)
+	filtername := strings.TrimSuffix(base, filterSuffix)
+	return filtername
+}
+
+// getFilters is used to show which filters are available in total.
+func getFilters() []string {
+	var filters []string
+	files, err := filepath.Glob(filterGlob)
+	if err != nil {
+		log.WithFields(log.Fields{"cannot open filters": err}).Error("filter:")
+	}
+	for _, file := range files {
+		filtername := getFilterName(file)
+		filters = append(filters, filtername)
+	}
+	return filters
 }
 
 func filter(input string) (*FilterStream, error) {
