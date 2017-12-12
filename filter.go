@@ -52,7 +52,7 @@ func init() {
 			log.WithFields(log.Fields{"opening filter failed": file}).Error("filter:")
 		}
 		// 2. look up a symbol (an exported function or variable)
-		// in this case, variable Greeter
+		// in this case, variable FilterPlugin
 		module, err := plugin.Lookup("FilterPlugin")
 		if err != nil {
 			log.WithFields(log.Fields{"FilterPlugin not detected": file}).Error("filter:")
