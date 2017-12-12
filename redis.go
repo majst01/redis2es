@@ -60,6 +60,7 @@ func (r *redisClient) readBlocking() (string, error) {
 
 	result, err := redis.Strings(c.Do("BLPOP", r.key, 0))
 	if err != nil {
+		time.Sleep(time.Duration(time.Millisecond * 200))
 		return "", fmt.Errorf("error getting value to key: %s with: %v", r.key, err)
 	}
 	if len(result) != 2 {
