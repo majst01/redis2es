@@ -14,6 +14,12 @@
   version = "v1.3.0"
 
 [[projects]]
+  name = "github.com/google/uuid"
+  packages = ["."]
+  revision = "064e2069ce9c359c118179501254f67d7d37ba24"
+  version = "0.2"
+
+[[projects]]
   name = "github.com/json-iterator/go"
   packages = ["."]
   revision = "f7279a603edee96fe7764d3de9c6ff8cf9970994"
@@ -76,6 +82,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8934242556bc9dcf651a42fa143df213a600a52082c545f1862dd96ba41406d0"
+  inputs-digest = "69dbf13750ff51f63a3e97d09824bdb046d1e19d98f19ba703ba1db2641806c2"
   solver-name = "gps-cdcl"
   solver-version = 1

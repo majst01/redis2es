@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/olivere/elastic"
 	log "github.com/sirupsen/logrus"
 )
@@ -89,8 +89,8 @@ func (r *redisClient) index(documents chan document) {
 				log.WithFields(log.Fields{"body": doc.body, "indexName": doc.indexName, "err": err}).Error("index:")
 				continue
 			}
-			// FIXME id generation needed ??
-			id := base64.URLEncoding.EncodeToString([]byte(doc.body))
+
+			id := uuid.New().String()
 			bulk.Add(elastic.NewBulkIndexRequest().Id(id).Doc(doc.body))
 
 			log.WithFields(log.Fields{"outstanding": bulk.NumberOfActions()}).Debug("index:")
