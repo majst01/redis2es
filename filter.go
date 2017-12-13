@@ -82,6 +82,9 @@ func (r *redisClient) isFilterEnabled(file string) bool {
 
 func getFilterName(filename string) string {
 	base := path.Base(filename)
+	if !strings.HasSuffix(filename, filterSuffix) {
+		return ""
+	}
 	filtername := strings.TrimSuffix(base, filterSuffix)
 	return filtername
 }

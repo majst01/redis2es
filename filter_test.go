@@ -28,6 +28,26 @@ func TestFilter(t *testing.T) {
 
 }
 
+func TestGetFilterName(t *testing.T) {
+	name := getFilterName("lib/test_filter.so")
+	assert.Equal(t, name, "test", "filtername expected was not met.")
+
+	name = getFilterName("lib/test_filter.txt")
+	assert.Equal(t, name, "", "filtername expected was not met.")
+}
+
+func TestIsFilterEnabled(t *testing.T) {
+	r := &redisClient{
+		enabledFilters: []string{"noop", "dump"},
+	}
+
+	enabled := r.isFilterEnabled("lib/test_filter.so")
+	assert.False(t, enabled, "filter is expected to disabled")
+
+	enabled = r.isFilterEnabled("lib/noop_filter.so")
+	assert.True(t, enabled, "filter is expected to disabled")
+
+}
 func BenchmarkFilter(b *testing.B) {
 	input := "{\"key\":\"value\", \"Contract\":\"TestContract\"}"
 	for i := 0; i < b.N; i++ {
