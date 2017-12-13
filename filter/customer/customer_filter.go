@@ -4,40 +4,38 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/majst01/redis2es/filter"
 )
 
-type FilterStream struct {
-	mapContent  map[string]interface{}
-	jsonContent string
-	indexName   string
+// CustomerFilter check if customer in any case is present, lowercase it and and calculate indexname of it.
+type customerFilter struct {
 }
 
-// CustomerFilter check if customer in any case is present, lowercase it and and calculate indexname of it.
-type CustomerFilter struct {
-}
+const customer = "customer"
 
 // Name required to be a FilterPlugin
-func (cf CustomerFilter) Name() string {
+func (cf customerFilter) Name() string {
 	return "customerfilter"
 }
 
 // Filter required to be a FilterPlugin
-func (cf CustomerFilter) Filter(stream *FilterStream) (*FilterStream, error) {
-	for k, v := range stream.mapContent {
-		if strings.ToLower(k) == "customer" {
+func (cf customerFilter) Filter(stream *filter.Stream) error {
+	for k, v := range stream.MapContent {
+		if strings.ToLower(k) == customer {
 			vString, ok := v.(string)
 			if !ok {
-				return stream, fmt.Errorf("customer is not a string")
+				return fmt.Errorf("%s is not a string", customer)
 			}
 			oldValue := strings.ToLower(vString)
-			delete(stream.mapContent, k)
-			stream.mapContent["customer"] = oldValue
-			stream.indexName = fmt.Sprintf("logstash-%s-%d.%d.%d", oldValue, time.Now().Year(), time.Now().Month(), time.Now().Day())
+			delete(stream.MapContent, k)
+			stream.MapContent[customer] = oldValue
+			stream.IndexName = fmt.Sprintf("logstash-%s-%d.%d.%d", oldValue, time.Now().Year(), time.Now().Month(), time.Now().Day())
 		}
 	}
 
-	return stream, nil
+	return nil
 }
 
 // FilterPlugin exported symbol makes this plugin usable.
-var FilterPlugin CustomerFilter
+var FilterPlugin customerFilter

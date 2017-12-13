@@ -1,15 +1,10 @@
 package main
 
-import "strings"
+import (
+	"strings"
 
-// FilterStream passes the data between filters.
-// future plugin api:
-// https://medium.com/learning-the-go-programming-language/writing-modular-go-programs-with-plugins-ec46381ee1a9
-type FilterStream struct {
-	mapContent  map[string]interface{}
-	jsonContent string
-	indexName   string
-}
+	"github.com/majst01/redis2es/filter"
+)
 
 type lowercase string
 
@@ -17,16 +12,16 @@ func (l lowercase) Name() string {
 	return "lowercase keys filter"
 }
 
-func (l lowercase) Filter(stream *FilterStream) (*FilterStream, error) {
-	for k, v := range stream.mapContent {
+func (l lowercase) Filter(stream *filter.Stream) error {
+	for k, v := range stream.MapContent {
 		lowerCaseKey := strings.ToLower(k)
 		if lowerCaseKey == k {
 			continue
 		}
-		stream.mapContent[lowerCaseKey] = v
-		delete(stream.mapContent, k)
+		stream.MapContent[lowerCaseKey] = v
+		delete(stream.MapContent, k)
 	}
-	return stream, nil
+	return nil
 }
 
 // FilterPlugin exported symbol makes this plugin usable.

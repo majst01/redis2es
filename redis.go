@@ -88,14 +88,14 @@ func (r *redisClient) consume(documents chan document) {
 			log.WithFields(log.Fields{"error from BLPOP": err}).Error("consume:")
 			continue
 		}
-		filtered, err := filter(result)
+		filtered, err := processFilter(result)
 		if err != nil {
 			log.WithFields(log.Fields{"err": err}).Error("consume:")
 			continue
 		}
 		doc := document{
-			indexName: filtered.indexName,
-			body:      filtered.jsonContent,
+			indexName: filtered.IndexName,
+			body:      filtered.JSONContent,
 		}
 		documents <- doc
 	}
