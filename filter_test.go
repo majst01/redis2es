@@ -1,10 +1,12 @@
 package main
 
 import (
+	"os"
 	"testing"
 
 	"github.com/majst01/redis2es/filter"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type noopfilter struct {
@@ -48,6 +50,25 @@ func TestIsFilterEnabled(t *testing.T) {
 	assert.True(t, enabled, "filter is expected to disabled")
 
 }
+
+func TestGetFilters(t *testing.T) {
+	defer os.RemoveAll("lib")
+	err := os.RemoveAll("lib")
+	err = os.Mkdir("lib", 0755)
+	require.Nil(t, err)
+	os.OpenFile("lib/test_filter.so", os.O_RDWR|os.O_CREATE, 0755)
+
+	filters := getFilters()
+	assert.True(t, len(filters) == 1, "one filter is expected")
+	assert.Equal(t, "test", filters[0], "testfilter must be present")
+
+	os.OpenFile("lib/noop_filter.so", os.O_RDWR|os.O_CREATE, 0755)
+	filters = getFilters()
+	assert.True(t, len(filters) == 2, "two filter is expected")
+	assert.Equal(t, "noop", filters[0], "noopfilter must be present")
+	assert.Equal(t, "test", filters[1], "testfilter must be present")
+}
+
 func BenchmarkFilter(b *testing.B) {
 	input := "{\"key\":\"value\", \"Contract\":\"TestContract\"}"
 	for i := 0; i < b.N; i++ {
