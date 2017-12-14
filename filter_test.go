@@ -21,9 +21,12 @@ func (n noopfilter) Filter(stream *filter.Stream) error {
 
 func TestFilter(t *testing.T) {
 	input := "{\"key\":\"value\"}"
-	filters = []FilterPlugin{}
+	filters := []FilterPlugin{}
 	filters = append(filters, noopfilter{})
-	output, err := processFilter(input)
+	r := &redisClient{
+		filters: filters,
+	}
+	output, err := r.processFilter(input)
 	assert.Nil(t, err, "no error is expected")
 	assert.Equal(t, output.IndexName, "", "index must contain catchall")
 	assert.Equal(t, "value", output.MapContent["key"], "expected to have a map representation of json input")
@@ -86,8 +89,13 @@ func TestLoadFilters(t *testing.T) {
 
 func BenchmarkFilter(b *testing.B) {
 	input := "{\"key\":\"value\", \"Contract\":\"TestContract\"}"
+	filters := []FilterPlugin{}
+	filters = append(filters, noopfilter{})
+	r := &redisClient{
+		filters: filters,
+	}
 	for i := 0; i < b.N; i++ {
-		_, err := processFilter(input)
+		_, err := r.processFilter(input)
 		if err != nil {
 			assert.Fail(b, "%v", err)
 		}

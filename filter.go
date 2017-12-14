@@ -28,14 +28,13 @@ const (
 
 var (
 	json       = jsoniter.ConfigCompatibleWithStandardLibrary
-	filters    []FilterPlugin
 	filterGlob = path.Join(filterDirectory, "*"+filterSuffix)
 )
 
 func (r *redisClient) loadFilters() {
 	log.WithFields(log.Fields{"init": "initialize filters"}).Info("loadfilters::")
 
-	filters = []FilterPlugin{}
+	filters := []FilterPlugin{}
 
 	// find all additional filter plugins and add them to a list
 	files, err := filepath.Glob(filterGlob)
@@ -54,6 +53,7 @@ func (r *redisClient) loadFilters() {
 		}
 		filters = append(filters, filter)
 	}
+	r.filters = filters
 }
 
 func loadFilter(file string) (FilterPlugin, error) {
@@ -116,12 +116,12 @@ func getFilters() []string {
 }
 
 // processFilter apply all filters enabled to the stream
-func processFilter(input string) (*filter.Stream, error) {
+func (r *redisClient) processFilter(input string) (*filter.Stream, error) {
 	start := time.Now()
 	stream := &filter.Stream{
 		JSONContent: input,
 	}
-	if len(filters) == 0 {
+	if len(r.filters) == 0 {
 		log.Debug("filter: no filters defined, returning original")
 		return stream, nil
 	}
@@ -131,7 +131,7 @@ func processFilter(input string) (*filter.Stream, error) {
 	}
 
 	// check if contract in any case is present, lowercase then
-	for _, f := range filters {
+	for _, f := range r.filters {
 		s := time.Now()
 		log.WithFields(log.Fields{"call filter:": f.Name()}).Debug("filter:")
 		err = f.Filter(stream)

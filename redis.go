@@ -16,6 +16,7 @@ type redisClient struct {
 	ec             *elastic.Client
 	bulkProcessor  *elastic.BulkProcessor
 	enabledFilters []string
+	filters        []FilterPlugin
 }
 
 func newPool(host string, port int, db int, password string, usetls, tlsskipverify bool) *redis.Pool {
@@ -88,7 +89,7 @@ func (r *redisClient) consume(documents chan document) {
 			log.WithFields(log.Fields{"error from BLPOP": err}).Error("consume:")
 			continue
 		}
-		filtered, err := processFilter(result)
+		filtered, err := r.processFilter(result)
 		if err != nil {
 			log.WithFields(log.Fields{"err": err}).Error("consume:")
 			continue
