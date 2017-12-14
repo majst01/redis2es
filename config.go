@@ -19,7 +19,7 @@ type Specification struct {
 	BulkSize       int           `default:"1000" desc:"writes to elastic are done in bulks of bulkSize" required:"False"`
 	BulkTicker     time.Duration `default:"2s" desc:"duration (go time.Duration format) between bulk writes to elastic" required:"False"`
 	PoolSize       int           `default:"2" desc:"pool of workers to consume redis messages and write to elasticsearch" required:"False"`
-	EnabledFilters []string      `default:"customer" desc:"comma seperated list of filters to be used, get a list of available filters with -l" required:"False"`
+	EnabledFilters []string      `default:"catchall,customer" desc:"comma seperated list of filters to be used, get a list of available filters with -l" required:"False"`
 	Debug          bool          `default:"false" desc:"turn on debug log" required:"False"`
 }
 
