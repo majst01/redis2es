@@ -1,4 +1,4 @@
-all: clean test plugins
+all: clean dep test plugins
 	go build
 
 plugins:
