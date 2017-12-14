@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/kelseyhightower/envconfig"
@@ -54,9 +53,9 @@ func main() {
 	bulk, err := client.BulkProcessor().
 		Name("BackgroundWorker-1").
 		Workers(spec.PoolSize).         // number of workers
-		BulkActions(spec.BulkSize).     // commit if # requests >= 1000
+		BulkActions(spec.BulkSize).     // commit if # requests >= BulkSize
 		BulkSize(2 << 20).              // commit if size of requests >= 2 MB
-		FlushInterval(spec.BulkTicker). // commit every 30s
+		FlushInterval(spec.BulkTicker). // commit every given interval
 		Stats(true).                    // collect stats
 		Do(context.Background())
 	if err != nil {
@@ -83,5 +82,5 @@ func main() {
 	}
 
 	// Stay in forground
-	fmt.Scanln()
+	rc.stats()
 }
