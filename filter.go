@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"path"
 	"path/filepath"
 	"plugin"
@@ -46,29 +47,40 @@ func (r *redisClient) loadFilters() {
 			log.WithFields(log.Fields{"filter disabled": file}).Info("loadfilters:")
 			continue
 		}
-		// load module
-		// 1. open the so file to load the symbols
-		plugin, err := plugin.Open(file)
+		filter, err := loadFilter(file)
 		if err != nil {
-			log.WithFields(log.Fields{"opening filter failed": file}).Error("loadfilters:")
+			log.WithFields(log.Fields{"err": err}).Info("loadfilters:")
+			continue
 		}
-		// 2. look up a symbol (an exported function or variable)
-		// in this case, variable FilterPlugin
-		module, err := plugin.Lookup("FilterPlugin")
-		if err != nil {
-			log.WithFields(log.Fields{"FilterPlugin not detected": file}).Error("loadfilters:")
-		}
-
-		// 3. Assert that loaded symbol is of a desired type
-		filter, ok := module.(FilterPlugin)
-		if !ok {
-			log.WithFields(log.Fields{"FilterPlugin interface not detected": file}).Error("loadfilters:")
-		}
-		log.WithFields(log.Fields{"filtername": filter.Name(), "filter shared lib": file}).Info("loadfilters:")
 		filters = append(filters, filter)
 	}
 }
 
+func loadFilter(file string) (FilterPlugin, error) {
+	// load module
+	// 1. open the so file to load the symbols
+	plugin, err := plugin.Open(file)
+	if err != nil {
+		return nil, fmt.Errorf("opening filter file %s failed with: %v", file, err)
+	}
+	// 2. look up a symbol (an exported function or variable)
+	// in this case, variable FilterPlugin
+	module, err := plugin.Lookup("FilterPlugin")
+	if err != nil {
+		return nil, fmt.Errorf("FilterPlugin not detected in %s with: %v", file, err)
+	}
+
+	// 3. Assert that loaded symbol is of a desired type
+	filter, ok := module.(FilterPlugin)
+	if !ok {
+		return nil, fmt.Errorf("FilterPlugin interface not detected in %s", file)
+	}
+	log.WithFields(log.Fields{"filtername": filter.Name(), "filterfile": file}).Info("loadfilters:")
+
+	return filter, nil
+}
+
+// isFilterEnabled returns true if this filter is enabled by config.
 func (r *redisClient) isFilterEnabled(file string) bool {
 	filtername := getFilterName(file)
 	for _, filtered := range r.enabledFilters {
@@ -79,6 +91,7 @@ func (r *redisClient) isFilterEnabled(file string) bool {
 	return false
 }
 
+// getFilterName extracts a short filtername from filter file path.
 func getFilterName(filename string) string {
 	base := path.Base(filename)
 	if !strings.HasSuffix(filename, filterSuffix) {
@@ -102,6 +115,7 @@ func getFilters() []string {
 	return filters
 }
 
+// processFilter apply all filters enabled to the stream
 func processFilter(input string) (*filter.Stream, error) {
 	start := time.Now()
 	stream := &filter.Stream{
