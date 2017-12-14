@@ -25,7 +25,7 @@ func TestFilter(t *testing.T) {
 	filters = append(filters, noopfilter{})
 	output, err := processFilter(input)
 	assert.Nil(t, err, "no error is expected")
-	assert.Contains(t, output.IndexName, "catchall", "index must contain catchall")
+	assert.Equal(t, output.IndexName, "", "index must contain catchall")
 	assert.Equal(t, "value", output.MapContent["key"], "expected to have a map representation of json input")
 
 }
@@ -67,6 +67,21 @@ func TestGetFilters(t *testing.T) {
 	assert.True(t, len(filters) == 2, "two filter is expected")
 	assert.Equal(t, "noop", filters[0], "noopfilter must be present")
 	assert.Equal(t, "test", filters[1], "testfilter must be present")
+}
+
+func TestLoadFilters(t *testing.T) {
+	defer os.RemoveAll("lib")
+	err := os.RemoveAll("lib")
+	err = os.Mkdir("lib", 0755)
+	require.Nil(t, err)
+	os.OpenFile("lib/test_filter.so", os.O_RDWR|os.O_CREATE, 0755)
+
+	// FIXME implement
+	//r := &redisClient{
+	//	enabledFilters: []string{"test"},
+	//}
+
+	// r.loadFilters()
 }
 
 func BenchmarkFilter(b *testing.B) {
