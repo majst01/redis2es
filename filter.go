@@ -40,32 +40,32 @@ func (r *redisClient) loadFilters() {
 	// find all additional filter plugins and add them to a list
 	files, err := filepath.Glob(filterGlob)
 	if err != nil {
-		log.WithFields(log.Fields{"cannot open filters": err}).Error("loadfilters::")
+		log.WithFields(log.Fields{"cannot open filters": err}).Error("loadfilters:")
 	}
 	for _, file := range files {
 		if !r.isFilterEnabled(file) {
-			log.WithFields(log.Fields{"filter disabled": file}).Info("loadfilters::")
+			log.WithFields(log.Fields{"filter disabled": file}).Info("loadfilters:")
 			continue
 		}
 		// load module
 		// 1. open the so file to load the symbols
 		plugin, err := plugin.Open(file)
 		if err != nil {
-			log.WithFields(log.Fields{"opening filter failed": file}).Error("loadfilters::")
+			log.WithFields(log.Fields{"opening filter failed": file}).Error("loadfilters:")
 		}
 		// 2. look up a symbol (an exported function or variable)
 		// in this case, variable FilterPlugin
 		module, err := plugin.Lookup("FilterPlugin")
 		if err != nil {
-			log.WithFields(log.Fields{"FilterPlugin not detected": file}).Error("loadfilters::")
+			log.WithFields(log.Fields{"FilterPlugin not detected": file}).Error("loadfilters:")
 		}
 
 		// 3. Assert that loaded symbol is of a desired type
 		filter, ok := module.(FilterPlugin)
 		if !ok {
-			log.WithFields(log.Fields{"FilterPlugin interface not detected": file}).Error("loadfilters::")
+			log.WithFields(log.Fields{"FilterPlugin interface not detected": file}).Error("loadfilters:")
 		}
-		log.WithFields(log.Fields{"filtername": filter.Name(), "filter shared lib": file}).Info("loadfilters::")
+		log.WithFields(log.Fields{"filtername": filter.Name(), "filter shared lib": file}).Info("loadfilters:")
 		filters = append(filters, filter)
 	}
 }
