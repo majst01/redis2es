@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"path"
 	"path/filepath"
 	"plugin"
@@ -106,7 +105,6 @@ func getFilters() []string {
 func processFilter(input string) (*filter.Stream, error) {
 	start := time.Now()
 	stream := &filter.Stream{
-		IndexName:   fmt.Sprintf("logstash-catchall-%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day()),
 		JSONContent: input,
 	}
 	if len(filters) == 0 {
