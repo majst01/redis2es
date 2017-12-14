@@ -20,16 +20,16 @@ fluent-bit/logstash --> stunnel --> redis <-- logstash --> elasticsearch
 
 New Picture
 ```graphviz
-fluent-bit/logstash --> stunnel --> redis <-- redis-to-elastic --> elasticsearch
+fluent-bit/logstash --> stunnel --> redis <-- redis2es --> elasticsearch
 ```
 
 In a Elastic Cluster
 ```graphviz
-                                                                /-> elasticsearch
-                                                               |
-fluent-bit/logstash --> stunnel --> redis <-- redis-to-elastic --> elasticsearch
-                                                               |
-                                                               \-> elasticsearch
+                                                        /-> elasticsearch
+                                                       |
+fluent-bit/logstash --> stunnel --> redis <-- redis2es --> elasticsearch
+                                                       |
+                                                        \-> elasticsearch
 ```
 
 ## Configuration
