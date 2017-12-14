@@ -40,10 +40,8 @@ func main() {
 	}
 
 	if spec.Debug {
-		log.WithFields(log.Fields{"debug enabled": true}).Info("main:")
 		log.SetLevel(log.DebugLevel)
 	} else {
-		log.WithFields(log.Fields{"debug disabled": true}).Info("main:")
 		log.SetLevel(log.InfoLevel)
 	}
 
