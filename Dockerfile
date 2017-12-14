@@ -8,7 +8,7 @@ RUN go get -u github.com/golang/dep/cmd/dep \
 
 FROM alpine
 
-COPY --from=builder /go/src/github.com/majst01/redis2es/redis2es /redis2es
+COPY --from=builder /go/src/github.com/majst01/redis2es/redis2es /redis2es/redis2es
 COPY --from=builder /go/src/github.com/majst01/redis2es/redis2es/lib /redis2es/lib
 
 CMD ["/redis2es"]
