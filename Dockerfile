@@ -1,14 +1,14 @@
 FROM golang:1.9 AS builder
 
+COPY . /go/src/github.com/majst01/redis2es/
 WORKDIR /go/src/github.com/majst01/redis2es/
-
-COPY Makefile Gopkg.* *.go filter  /go/src/github.com/majst01/redis2es/
 RUN go get -u github.com/golang/dep/cmd/dep \
- && make dep all
+ && make \
+ && mkdir -p /redis2es/lib \
+ && cp redis2es /redis2es/ \
+ && cp -a lib /redis2es/lib/
 
-FROM alpine
-
-COPY --from=builder /go/src/github.com/majst01/redis2es/redis2es /redis2es/redis2es
-COPY --from=builder /go/src/github.com/majst01/redis2es/redis2es/lib /redis2es/lib
-
-CMD ["/redis2es"]
+FROM debian:buster-slim
+WORKDIR /redis2es
+COPY --from=builder /redis2es/* /redis2es/
+CMD ["/redis2es/redis2es"]

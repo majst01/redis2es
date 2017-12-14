@@ -15,3 +15,6 @@ clean:
 
 dep:
 	dep ensure
+
+docker:
+	docker build --no-cache -t majst01/redis2es .

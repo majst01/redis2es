@@ -57,4 +57,4 @@ variables can be used:
 ## Filters
 
 Filters can be implemented in go and loaded on startup with the go plugin mechanism.
-For a start look at the sample plugin here [uppercase](filter/uppercase)
+For a start look at the sample plugin here [lowercase](filter/lowercase)
