@@ -1,5 +1,5 @@
 all: clean test plugins
-	go build 
+	go build
 
 plugins:
 	mkdir -p lib
