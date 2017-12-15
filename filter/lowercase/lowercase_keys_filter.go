@@ -25,5 +25,5 @@ func (l lowercaseFilter) Filter(stream *filter.Stream) error {
 	return nil
 }
 
-// FilterPlugin exported symbol makes this plugin usable.
-var FilterPlugin lowercaseFilter
+// Plugin exported symbol makes this plugin usable.
+var Plugin lowercaseFilter

@@ -18,5 +18,5 @@ func (c catchallFilter) Filter(stream *filter.Stream) error {
 	return nil
 }
 
-// FilterPlugin exported symbol to make it a usable plugin
-var FilterPlugin catchallFilter
+// Plugin exported symbol to make it a usable plugin
+var Plugin catchallFilter

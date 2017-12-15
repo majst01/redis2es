@@ -14,13 +14,6 @@ import (
 	"github.com/majst01/redis2es/filter"
 )
 
-// FilterPlugin modifies the input, which is a map representation of the json received
-// to a output map or errors out.
-type FilterPlugin interface {
-	Name() string
-	Filter(input *filter.Stream) error
-}
-
 const (
 	filterDirectory = "lib"
 	filterSuffix    = "_filter.so"
@@ -34,7 +27,7 @@ var (
 func (e *Client) loadFilters() {
 	log.WithFields(log.Fields{"init": "initialize filters"}).Info("loadfilters:")
 
-	filters := []FilterPlugin{}
+	filters := []filter.Plugin{}
 
 	// find all additional filter plugins and add them to a list
 	files, err := filepath.Glob(filterGlob)
@@ -56,7 +49,7 @@ func (e *Client) loadFilters() {
 	e.filters = filters
 }
 
-func loadFilter(file string) (FilterPlugin, error) {
+func loadFilter(file string) (filter.Plugin, error) {
 	// load module
 	// 1. open the so file to load the symbols
 	plugin, err := plugin.Open(file)
@@ -64,16 +57,16 @@ func loadFilter(file string) (FilterPlugin, error) {
 		return nil, fmt.Errorf("opening filter file %s failed with: %v", file, err)
 	}
 	// 2. look up a symbol (an exported function or variable)
-	// in this case, variable FilterPlugin
-	module, err := plugin.Lookup("FilterPlugin")
+	// in this case, variable Plugin
+	module, err := plugin.Lookup("Plugin")
 	if err != nil {
-		return nil, fmt.Errorf("FilterPlugin not detected in %s with: %v", file, err)
+		return nil, fmt.Errorf("Plugin not detected in %s with: %v", file, err)
 	}
 
 	// 3. Assert that loaded symbol is of a desired type
-	filter, ok := module.(FilterPlugin)
+	filter, ok := module.(filter.Plugin)
 	if !ok {
-		return nil, fmt.Errorf("FilterPlugin interface not detected in %s", file)
+		return nil, fmt.Errorf("Plugin interface not detected in %s", file)
 	}
 	log.WithFields(log.Fields{"filtername": filter.Name(), "filterfile": file}).Info("loadfilters:")
 

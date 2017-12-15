@@ -14,12 +14,12 @@ type customerFilter struct {
 
 const customer = "customer"
 
-// Name required to be a FilterPlugin
+// Name required to be a filter.Plugin
 func (cf customerFilter) Name() string {
 	return "customerfilter"
 }
 
-// Filter required to be a FilterPlugin
+// Filter required to be a filter.Plugin
 func (cf customerFilter) Filter(stream *filter.Stream) error {
 	for k, v := range stream.MapContent {
 		if strings.ToLower(k) == customer {
@@ -37,5 +37,5 @@ func (cf customerFilter) Filter(stream *filter.Stream) error {
 	return nil
 }
 
-// FilterPlugin exported symbol makes this plugin usable.
-var FilterPlugin customerFilter
+// Plugin exported symbol makes this plugin usable.
+var Plugin customerFilter

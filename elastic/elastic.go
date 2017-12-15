@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/majst01/redis2es/config"
+	"github.com/majst01/redis2es/filter"
 	"github.com/olivere/elastic"
 	log "github.com/sirupsen/logrus"
 )
@@ -16,7 +17,7 @@ type Client struct {
 	client         *elastic.Client
 	bulkProcessor  *elastic.BulkProcessor
 	enabledFilters []string
-	filters        []FilterPlugin
+	filters        []filter.Plugin
 }
 
 // Document is passed from redis to elastic

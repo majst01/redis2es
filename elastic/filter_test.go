@@ -21,7 +21,7 @@ func (n noopfilter) Filter(stream *filter.Stream) error {
 
 func TestFilter(t *testing.T) {
 	input := "{\"key\":\"value\"}"
-	filters := []FilterPlugin{}
+	filters := []filter.Plugin{}
 	filters = append(filters, noopfilter{})
 	e := &Client{
 		filters: filters,
@@ -89,7 +89,7 @@ func TestLoadFilters(t *testing.T) {
 
 func BenchmarkFilter(b *testing.B) {
 	input := "{\"key\":\"value\", \"Contract\":\"TestContract\"}"
-	filters := []FilterPlugin{}
+	filters := []filter.Plugin{}
 	filters = append(filters, noopfilter{})
 	e := &Client{
 		filters: filters,
