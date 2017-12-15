@@ -3,14 +3,8 @@
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
-  packages = ["spew","spew/testdata"]
+  packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
-
-[[projects]]
-  name = "github.com/fortytw2/leaktest"
-  packages = ["."]
-  revision = "7dad53304f9614c1c365755c1176a8e876fee3e8"
   version = "v1.1.0"
 
 [[projects]]
@@ -18,12 +12,6 @@
   packages = ["internal","redis"]
   revision = "47dc60e71eed504e3ef8e77ee3c6fe720f3be57f"
   version = "v1.3.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/google/gofuzz"
-  packages = ["."]
-  revision = "24818f796faf91cd76ec7bddd72458fbced7a6c1"
 
 [[projects]]
   name = "github.com/google/uuid"
@@ -68,62 +56,32 @@
   version = "v1.0.3"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/stretchr/objx"
-  packages = ["."]
-  revision = "1a9d0bb9f541897e62256577b352fdbc1fb4fd94"
-
-[[projects]]
   name = "github.com/stretchr/testify"
-  packages = ["assert","http","mock","require"]
+  packages = ["assert","require"]
   revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
   version = "v1.1.4"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
-  packages = ["acme","acme/autocert","curve25519","ed25519","ed25519/internal/edwards25519","nacl/auth","pkcs12/internal/rc2","ssh","ssh/terminal"]
+  packages = ["ssh/terminal"]
   revision = "94eea52f7b742c7cbe0b03b22f0c4c8631ece122"
 
 [[projects]]
   branch = "master"
-  name = "golang.org/x/net"
-  packages = ["context"]
-  revision = "d866cfc389cec985d6fda2859936a575a55a3ab6"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/sync"
-  packages = ["errgroup"]
-  revision = "fd80eb99c8f653c847d294a001bdf2a3a6f768f5"
-
-[[projects]]
-  branch = "master"
   name = "golang.org/x/sys"
-  packages = ["unix","windows","windows/registry","windows/svc","windows/svc/debug","windows/svc/eventlog","windows/svc/mgr"]
+  packages = ["unix","windows"]
   revision = "8b4580aae2a0dd0c231a45d3ccb8434ff533b840"
 
 [[projects]]
-  name = "gopkg.in/airbrake/gobrake.v2"
-  packages = ["."]
-  revision = "668876711219e8b0206e2994bf0a59d889c775aa"
-  version = "v2.0.9"
-
-[[projects]]
-  name = "gopkg.in/gemnasium/logrus-airbrake-hook.v2"
-  packages = ["."]
-  revision = "e928b033a891c0175fb643d5aa0779e86325eb12"
-  version = "v2.1.2"
-
-[[projects]]
   name = "gopkg.in/olivere/elastic.v5"
-  packages = [".","config","uritemplates"]
+  packages = ["config","uritemplates"]
   revision = "79ff368708b3a2a9da641dc831d95fd0782bf4ef"
   version = "v5.0.58"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6a26eb2b668615b5578924135eedb87647c60ca74c7bcf5a2964707819b0f5f6"
+  inputs-digest = "48c187d3a4a87aead3e447ab8c0cfa56b76f3b6f1c01effb20d4a01df3a6a375"
   solver-name = "gps-cdcl"
   solver-version = 1
