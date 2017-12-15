@@ -19,7 +19,6 @@ func init() {
 func main() {
 	var spec config.Specification
 	envconfig.MustProcess("redis2es", &spec)
-	spec.Log()
 	if len(os.Args) > 1 {
 		if os.Args[1] == "-l" {
 			log.WithFields(log.Fields{"filters": elastic.GetFilters()}).Info("main:")
@@ -28,12 +27,12 @@ func main() {
 		envconfig.Usage("redis2es", &spec)
 		os.Exit(1)
 	}
-
 	if spec.Debug {
 		log.SetLevel(log.DebugLevel)
 	} else {
 		log.SetLevel(log.InfoLevel)
 	}
+	spec.Log()
 
 	ec := elastic.NewElasticClient(spec)
 	defer ec.Close()

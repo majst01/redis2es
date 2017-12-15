@@ -27,10 +27,27 @@ type Document struct {
 
 // NewElasticClient create a new instance of a elasticClient
 func NewElasticClient(spec config.Specification) *ElasticClient {
-	client, err := elastic.NewSimpleClient(elastic.SetURL(spec.ElasticURLs...))
+	var client *elastic.Client
+	var err error
+	if spec.ElasticUsername != "" {
+		client, err = elastic.NewClient(
+			elastic.SetURL(spec.ElasticURLs...),
+			elastic.SetBasicAuth(spec.ElasticUsername, spec.ElasticPassword),
+		)
+	} else {
+		client, err = elastic.NewClient(
+			elastic.SetURL(spec.ElasticURLs...),
+		)
+	}
 	if err != nil {
 		log.WithFields(log.Fields{"error connecting to elastic": err}).Error("main:")
 	}
+	nodesInfo, err := client.NodesInfo().Do(context.Background())
+	if err != nil {
+		log.WithFields(log.Fields{"error reading nodesInfo from elastic": err}).Error("main:")
+	}
+	log.WithFields(log.Fields{"elasticsearch.ClusterName": nodesInfo.ClusterName}).Info("main:")
+
 	bulk, err := client.BulkProcessor().
 		Name("BackgroundWorker-1").
 		Workers(spec.PoolSize).         // number of workers

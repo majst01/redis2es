@@ -47,6 +47,8 @@ variables can be used:
 | REDIS2ES_USETLS          | True or False                    | false                   | False      | connect to redis using tls
 | REDIS2ES_TLSSKIPVERIFY   | True or False                    | false                   | False      | if connection to redis via tls, skip tls certificate verification
 | REDIS2ES_ELASTICURLS     | Comma-separated list of String   | http://127.0.0.1:9200   | False      | the elasticsearch connection url, separated by comma for many es servers
+| REDIS2ES_ELASTICUSERNAME | String                           |                         | False      | username to connect to elasticsearch
+| REDIS2ES_ELASTICPASSWORD | String                           |                         | False      | password to connect to elasticsearch
 | REDIS2ES_BULKSIZE        | Integer                          | 1000                    | False      | writes to elastic are done in bulks of bulkSize
 | REDIS2ES_BULKTICKER      | Duration                         | 2s                      | False      | duration (go time.Duration format) between bulk writes to elastic
 | REDIS2ES_POOLSIZE        | Integer                          | 2                       | False      | pool of workers to consume redis messages and write to elasticsearch

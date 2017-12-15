@@ -13,6 +13,7 @@ services:
       - http.host=0.0.0.0
       - transport.host=127.0.0.1
       - discovery.type=single-node
+      - ELASTICSEARCH_USERNAME=kibana
       - ELASTIC_PASSWORD=secret
     ports:
       - 9200:9200
