@@ -7,11 +7,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var (
-	// EnabledFilters specifies which filters to use.
-	EnabledFilters []string
-)
-
 type document struct {
 	indexName string
 	body      string
@@ -46,9 +41,9 @@ func main() {
 
 	rc := NewRedisClient(spec)
 
+	documents := make(chan document, 10)
+	go ec.index(documents)
 	for i := 0; i < spec.PoolSize; i++ {
-		documents := make(chan document, 10)
-		go ec.index(documents)
 		go rc.consume(documents)
 	}
 
