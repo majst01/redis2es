@@ -32,7 +32,7 @@ var (
 )
 
 func (r *redisClient) loadFilters() {
-	log.WithFields(log.Fields{"init": "initialize filters"}).Info("loadfilters::")
+	log.WithFields(log.Fields{"init": "initialize filters"}).Info("loadfilters:")
 
 	filters := []FilterPlugin{}
 
