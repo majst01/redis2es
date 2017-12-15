@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,16 +30,6 @@ func (r *redisClient) stats() {
 		select {
 		case <-ticker.C:
 			stats := r.bulkProcessor.Stats()
-			log.WithFields(
-				log.Fields{
-					"flushed":   stats.Flushed,
-					"commited":  stats.Committed,
-					"indexed":   stats.Indexed,
-					"created":   stats.Created,
-					"updated":   stats.Updated,
-					"succeeded": stats.Succeeded,
-					"failed":    stats.Failed,
-				}).Info("stats:")
 
 			//	fmt.Printf("Number of times flush has been invoked: %d\n", stats.Flushed)
 			//	fmt.Printf("Number of times workers committed reqs: %d\n", stats.Committed)
@@ -48,19 +39,24 @@ func (r *redisClient) stats() {
 			//	fmt.Printf("Number of requests reported as success: %d\n", stats.Succeeded)
 			//	fmt.Printf("Number of requests reported as failed : %d\n", stats.Failed)
 
+			fields := log.Fields{
+				"flushed":   stats.Flushed,
+				"commited":  stats.Committed,
+				"indexed":   stats.Indexed,
+				"created":   stats.Created,
+				"updated":   stats.Updated,
+				"succeeded": stats.Succeeded,
+				"failed":    stats.Failed,
+			}
+
 			for i, w := range stats.Workers {
 				//		fmt.Printf("Worker %d: Number of requests queued: %d\n", i, w.Queued)
 				//		fmt.Printf("           Last response time       : %v\n", w.LastDuration)
-
-				// FIXME put these into above log line as nested struct
-				log.WithFields(
-					log.Fields{
-						"worker":       i,
-						"queued":       w.Queued,
-						"lastduration": w.LastDuration,
-					}).Info("stats:")
-
+				fields[fmt.Sprintf("w%d.queued", i)] = w.Queued
+				fields[fmt.Sprintf("w%d.lastduration", i)] = w.LastDuration
 			}
+
+			log.WithFields(fields).Info("stats:")
 		}
 	}
 }
