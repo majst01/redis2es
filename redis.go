@@ -7,13 +7,11 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
-	"github.com/olivere/elastic"
 )
 
 type redisClient struct {
 	key            string
 	pool           *redis.Pool
-	bulkProcessor  *elastic.BulkProcessor
 	enabledFilters []string
 	filters        []FilterPlugin
 }

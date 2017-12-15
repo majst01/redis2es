@@ -1,13 +1,10 @@
 package main
 
 import (
-	"context"
 	"os"
 
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/olivere/elastic"
 )
 
 var (
@@ -46,29 +43,12 @@ func main() {
 
 	redisPool := newPool(spec.Host, spec.Port, spec.DB, spec.Password, spec.UseTLS, spec.TLSSkipVerify)
 
-	client, err := elastic.NewSimpleClient(elastic.SetURL(spec.ElasticURLs...))
-	if err != nil {
-		log.WithFields(log.Fields{"error connecting to elastic": err}).Error("main:")
-	}
-	bulk, err := client.BulkProcessor().
-		Name("BackgroundWorker-1").
-		Workers(spec.PoolSize).         // number of workers
-		BulkActions(spec.BulkSize).     // commit if # requests >= BulkSize
-		BulkSize(2 << 20).              // commit if size of requests >= 2 MB
-		FlushInterval(spec.BulkTicker). // commit every given interval
-		Stats(true).                    // collect stats
-		Do(context.Background())
-	if err != nil {
-		log.WithFields(log.Fields{"error creating bulkprocessor": err}).Fatal("main:")
-	}
-
-	defer bulk.Close()
-	defer client.Stop()
+	ec := NewElasticClient(spec)
+	defer ec.close()
 
 	rc := &redisClient{
 		pool:           redisPool,
 		key:            spec.Key,
-		bulkProcessor:  bulk,
 		enabledFilters: spec.EnabledFilters,
 	}
 
@@ -76,10 +56,10 @@ func main() {
 
 	for i := 0; i < spec.PoolSize; i++ {
 		documents := make(chan document, 10)
-		go rc.index(documents)
+		go ec.index(documents)
 		go rc.consume(documents)
 	}
 
 	// Stay in forground
-	rc.stats()
+	ec.stats()
 }

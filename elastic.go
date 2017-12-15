@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -9,7 +10,43 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (r *redisClient) index(documents chan document) {
+// ElasticClient is used to store data in elasticsearch
+type ElasticClient struct {
+	client        *elastic.Client
+	bulkProcessor *elastic.BulkProcessor
+}
+
+// NewElasticClient create a new instance of a elasticClient
+func NewElasticClient(spec Specification) *ElasticClient {
+	client, err := elastic.NewSimpleClient(elastic.SetURL(spec.ElasticURLs...))
+	if err != nil {
+		log.WithFields(log.Fields{"error connecting to elastic": err}).Error("main:")
+	}
+	bulk, err := client.BulkProcessor().
+		Name("BackgroundWorker-1").
+		Workers(spec.PoolSize).         // number of workers
+		BulkActions(spec.BulkSize).     // commit if # requests >= BulkSize
+		BulkSize(2 << 20).              // commit if size of requests >= 2 MB
+		FlushInterval(spec.BulkTicker). // commit every given interval
+		Stats(true).                    // collect stats
+		Do(context.Background())
+	if err != nil {
+		log.WithFields(log.Fields{"error creating bulkprocessor": err}).Fatal("main:")
+	}
+
+	ec := &ElasticClient{
+		client:        client,
+		bulkProcessor: bulk,
+	}
+	return ec
+}
+
+func (e *ElasticClient) close() {
+	e.bulkProcessor.Close()
+	e.client.Stop()
+}
+
+func (e *ElasticClient) index(documents chan document) {
 	for {
 		select {
 		case doc := <-documents:
@@ -17,19 +54,19 @@ func (r *redisClient) index(documents chan document) {
 
 			id := uuid.New().String()
 			request := elastic.NewBulkIndexRequest().Index(doc.indexName).Type("log").Id(id).Doc(doc.body)
-			r.bulkProcessor.Add(request)
+			e.bulkProcessor.Add(request)
 
 			log.WithFields(log.Fields{"id": id, "index": doc.indexName}).Debug("index:")
 		}
 	}
 }
 
-func (r *redisClient) stats() {
+func (e *ElasticClient) stats() {
 	ticker := time.NewTicker(time.Second * 60)
 	for {
 		select {
 		case <-ticker.C:
-			stats := r.bulkProcessor.Stats()
+			stats := e.bulkProcessor.Stats()
 
 			//	fmt.Printf("Number of times flush has been invoked: %d\n", stats.Flushed)
 			//	fmt.Printf("Number of times workers committed reqs: %d\n", stats.Committed)
