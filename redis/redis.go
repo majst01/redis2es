@@ -1,9 +1,11 @@
-package main
+package redis
 
 import (
 	"fmt"
 	"time"
 
+	"github.com/majst01/redis2es/config"
+	"github.com/majst01/redis2es/elastic"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
@@ -11,23 +13,21 @@ import (
 
 // RedisClient is used to read from redis
 type RedisClient struct {
-	key            string
-	pool           *redis.Pool
-	enabledFilters []string
-	filters        []FilterPlugin
+	key  string
+	pool *redis.Pool
+	ec   *elastic.ElasticClient
 }
 
 // NewRedisClient create a new instance of a redisClient
-func NewRedisClient(spec Specification) *RedisClient {
+func NewRedisClient(spec config.Specification, ec *elastic.ElasticClient) *RedisClient {
 	redisPool := newPool(spec.Host, spec.Port, spec.DB, spec.Password, spec.UseTLS, spec.TLSSkipVerify)
 
 	rc := &RedisClient{
-		pool:           redisPool,
-		key:            spec.Key,
-		enabledFilters: spec.EnabledFilters,
+		pool: redisPool,
+		key:  spec.Key,
+		ec:   ec,
 	}
 
-	rc.loadFilters()
 	return rc
 }
 
@@ -91,7 +91,8 @@ func (r *RedisClient) pending() int {
 	return v
 }
 
-func (r *RedisClient) consume(documents chan document) {
+// Consume logs from redis
+func (r *RedisClient) Consume(documents chan elastic.Document) {
 	c := r.pool.Get()
 	defer c.Close()
 
@@ -101,14 +102,14 @@ func (r *RedisClient) consume(documents chan document) {
 			log.WithFields(log.Fields{"error from BLPOP": err}).Error("consume:")
 			continue
 		}
-		filtered, err := r.processFilter(result)
+		filtered, err := r.ec.ProcessFilter(result)
 		if err != nil {
 			log.WithFields(log.Fields{"err": err}).Error("consume:")
 			continue
 		}
-		doc := document{
-			indexName: filtered.IndexName,
-			body:      filtered.JSONContent,
+		doc := elastic.Document{
+			IndexName: filtered.IndexName,
+			Body:      filtered.JSONContent,
 		}
 		documents <- doc
 	}

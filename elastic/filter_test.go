@@ -1,4 +1,4 @@
-package main
+package elastic
 
 import (
 	"os"
@@ -23,10 +23,10 @@ func TestFilter(t *testing.T) {
 	input := "{\"key\":\"value\"}"
 	filters := []FilterPlugin{}
 	filters = append(filters, noopfilter{})
-	r := &RedisClient{
+	e := &ElasticClient{
 		filters: filters,
 	}
-	output, err := r.processFilter(input)
+	output, err := e.processFilter(input)
 	assert.Nil(t, err, "no error is expected")
 	assert.Equal(t, output.IndexName, "", "index must contain catchall")
 	assert.Equal(t, "value", output.MapContent["key"], "expected to have a map representation of json input")
@@ -42,14 +42,14 @@ func TestGetFilterName(t *testing.T) {
 }
 
 func TestIsFilterEnabled(t *testing.T) {
-	r := &RedisClient{
+	e := &ElasticClient{
 		enabledFilters: []string{"noop", "dump"},
 	}
 
-	enabled := r.isFilterEnabled("lib/test_filter.so")
+	enabled := e.isFilterEnabled("lib/test_filter.so")
 	assert.False(t, enabled, "filter is expected to disabled")
 
-	enabled = r.isFilterEnabled("lib/noop_filter.so")
+	enabled = e.isFilterEnabled("lib/noop_filter.so")
 	assert.True(t, enabled, "filter is expected to disabled")
 
 }
@@ -91,11 +91,11 @@ func BenchmarkFilter(b *testing.B) {
 	input := "{\"key\":\"value\", \"Contract\":\"TestContract\"}"
 	filters := []FilterPlugin{}
 	filters = append(filters, noopfilter{})
-	r := &RedisClient{
+	e := &ElasticClient{
 		filters: filters,
 	}
 	for i := 0; i < b.N; i++ {
-		_, err := r.processFilter(input)
+		_, err := e.processFilter(input)
 		if err != nil {
 			assert.Fail(b, "%v", err)
 		}

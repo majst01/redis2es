@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"time"
@@ -23,7 +23,8 @@ type Specification struct {
 	Debug          bool          `default:"false" desc:"turn on debug log" required:"False"`
 }
 
-func (s *Specification) log() {
+// Log prints all config to log
+func (s *Specification) Log() {
 	log.WithFields(log.Fields{
 		"key":            s.Key,
 		"host":           s.Host,

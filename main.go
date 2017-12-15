@@ -3,14 +3,13 @@ package main
 import (
 	"os"
 
+	"github.com/majst01/redis2es/config"
+	"github.com/majst01/redis2es/elastic"
+	"github.com/majst01/redis2es/redis"
+
 	"github.com/kelseyhightower/envconfig"
 	log "github.com/sirupsen/logrus"
 )
-
-type document struct {
-	indexName string
-	body      string
-}
 
 func init() {
 	log.SetFormatter(&log.TextFormatter{})
@@ -18,12 +17,12 @@ func init() {
 }
 
 func main() {
-	var spec Specification
+	var spec config.Specification
 	envconfig.MustProcess("redis2es", &spec)
-	spec.log()
+	spec.Log()
 	if len(os.Args) > 1 {
 		if os.Args[1] == "-l" {
-			log.WithFields(log.Fields{"filters": getFilters()}).Info("main:")
+			log.WithFields(log.Fields{"filters": elastic.GetFilters()}).Info("main:")
 			os.Exit(0)
 		}
 		envconfig.Usage("redis2es", &spec)
@@ -36,17 +35,17 @@ func main() {
 		log.SetLevel(log.InfoLevel)
 	}
 
-	ec := NewElasticClient(spec)
-	defer ec.close()
+	ec := elastic.NewElasticClient(spec)
+	defer ec.Close()
 
-	rc := NewRedisClient(spec)
+	rc := redis.NewRedisClient(spec, ec)
 
-	documents := make(chan document, 10)
-	go ec.index(documents)
+	documents := make(chan elastic.Document, 10)
+	go ec.Index(documents)
 	for i := 0; i < spec.PoolSize; i++ {
-		go rc.consume(documents)
+		go rc.Consume(documents)
 	}
 
 	// Stay in forground
-	ec.stats()
+	ec.Stats()
 }

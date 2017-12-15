@@ -1,4 +1,4 @@
-package main
+package elastic
 
 import (
 	"context"
@@ -6,18 +6,27 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/majst01/redis2es/config"
 	"github.com/olivere/elastic"
 	log "github.com/sirupsen/logrus"
 )
 
 // ElasticClient is used to store data in elasticsearch
 type ElasticClient struct {
-	client        *elastic.Client
-	bulkProcessor *elastic.BulkProcessor
+	client         *elastic.Client
+	bulkProcessor  *elastic.BulkProcessor
+	enabledFilters []string
+	filters        []FilterPlugin
+}
+
+// Document is passed from redis to elastic
+type Document struct {
+	IndexName string
+	Body      string
 }
 
 // NewElasticClient create a new instance of a elasticClient
-func NewElasticClient(spec Specification) *ElasticClient {
+func NewElasticClient(spec config.Specification) *ElasticClient {
 	client, err := elastic.NewSimpleClient(elastic.SetURL(spec.ElasticURLs...))
 	if err != nil {
 		log.WithFields(log.Fields{"error connecting to elastic": err}).Error("main:")
@@ -35,33 +44,38 @@ func NewElasticClient(spec Specification) *ElasticClient {
 	}
 
 	ec := &ElasticClient{
-		client:        client,
-		bulkProcessor: bulk,
+		client:         client,
+		bulkProcessor:  bulk,
+		enabledFilters: spec.EnabledFilters,
 	}
+	ec.loadFilters()
 	return ec
 }
 
-func (e *ElasticClient) close() {
+// Close all Elastic resources
+func (e *ElasticClient) Close() {
 	e.bulkProcessor.Close()
 	e.client.Stop()
 }
 
-func (e *ElasticClient) index(documents chan document) {
+// Index a given document from a channel
+func (e *ElasticClient) Index(documents chan Document) {
 	for {
 		select {
 		case doc := <-documents:
 			log.WithFields(log.Fields{"doc": doc}).Debug("index:")
 
 			id := uuid.New().String()
-			request := elastic.NewBulkIndexRequest().Index(doc.indexName).Type("log").Id(id).Doc(doc.body)
+			request := elastic.NewBulkIndexRequest().Index(doc.IndexName).Type("log").Id(id).Doc(doc.Body)
 			e.bulkProcessor.Add(request)
 
-			log.WithFields(log.Fields{"id": id, "index": doc.indexName}).Debug("index:")
+			log.WithFields(log.Fields{"id": id, "index": doc.IndexName}).Debug("index:")
 		}
 	}
 }
 
-func (e *ElasticClient) stats() {
+// Stats periodically spit out BulkProcessor stats.
+func (e *ElasticClient) Stats() {
 	ticker := time.NewTicker(time.Second * 60)
 	for {
 		select {

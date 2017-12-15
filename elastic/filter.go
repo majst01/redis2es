@@ -1,4 +1,4 @@
-package main
+package elastic
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ var (
 	filterGlob = path.Join(filterDirectory, "*"+filterSuffix)
 )
 
-func (r *RedisClient) loadFilters() {
+func (e *ElasticClient) loadFilters() {
 	log.WithFields(log.Fields{"init": "initialize filters"}).Info("loadfilters:")
 
 	filters := []FilterPlugin{}
@@ -42,7 +42,7 @@ func (r *RedisClient) loadFilters() {
 		log.WithFields(log.Fields{"cannot open filters": err}).Error("loadfilters:")
 	}
 	for _, file := range files {
-		if !r.isFilterEnabled(file) {
+		if !e.isFilterEnabled(file) {
 			log.WithFields(log.Fields{"filter disabled": file}).Info("loadfilters:")
 			continue
 		}
@@ -53,7 +53,7 @@ func (r *RedisClient) loadFilters() {
 		}
 		filters = append(filters, filter)
 	}
-	r.filters = filters
+	e.filters = filters
 }
 
 func loadFilter(file string) (FilterPlugin, error) {
@@ -81,9 +81,9 @@ func loadFilter(file string) (FilterPlugin, error) {
 }
 
 // isFilterEnabled returns true if this filter is enabled by config.
-func (r *RedisClient) isFilterEnabled(file string) bool {
+func (e *ElasticClient) isFilterEnabled(file string) bool {
 	filtername := getFilterName(file)
-	for _, filtered := range r.enabledFilters {
+	for _, filtered := range e.enabledFilters {
 		if filtered == filtername {
 			return true
 		}
@@ -101,8 +101,8 @@ func getFilterName(filename string) string {
 	return filtername
 }
 
-// getFilters is used to show which filters are available in total.
-func getFilters() []string {
+// GetFilters is used to show which filters are available in total.
+func GetFilters() []string {
 	var filters []string
 	files, err := filepath.Glob(filterGlob)
 	if err != nil {
@@ -115,13 +115,13 @@ func getFilters() []string {
 	return filters
 }
 
-// processFilter apply all filters enabled to the stream
-func (r *RedisClient) processFilter(input string) (*filter.Stream, error) {
+// ProcessFilter apply all filters enabled to the stream
+func (e *ElasticClient) ProcessFilter(input string) (*filter.Stream, error) {
 	start := time.Now()
 	stream := &filter.Stream{
 		JSONContent: input,
 	}
-	if len(r.filters) == 0 {
+	if len(e.filters) == 0 {
 		log.Debug("filter: no filters defined, returning original")
 		return stream, nil
 	}
@@ -131,7 +131,7 @@ func (r *RedisClient) processFilter(input string) (*filter.Stream, error) {
 	}
 
 	// check if contract in any case is present, lowercase then
-	for _, f := range r.filters {
+	for _, f := range e.filters {
 		s := time.Now()
 		log.WithFields(log.Fields{"call filter:": f.Name()}).Debug("filter:")
 		err = f.Filter(stream)
