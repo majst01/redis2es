@@ -34,17 +34,17 @@ func main() {
 	}
 	spec.Log()
 
-	ec := elastic.NewElasticClient(spec)
+	ec := elastic.NewElasticClient(spec.Elastic)
 	defer ec.Close()
 
-	rc := redis.NewRedisClient(spec, ec)
+	rc := redis.NewRedisClient(spec.Redis, ec)
 
 	documents := make(chan elastic.Document, 10)
 	go ec.Index(documents)
-	for i := 0; i < spec.PoolSize; i++ {
+	for i := 0; i < spec.Redis.PoolSize; i++ {
 		go rc.Consume(documents)
 	}
 
 	// Stay in forground
-	ec.Stats(spec.StatsInterval)
+	ec.Stats(spec.Elastic.StatsInterval)
 }

@@ -26,17 +26,17 @@ type Document struct {
 }
 
 // NewElasticClient create a new instance of a elasticClient
-func NewElasticClient(spec config.Specification) *ElasticClient {
+func NewElasticClient(spec config.Elastic) *ElasticClient {
 	var client *elastic.Client
 	var err error
-	if spec.ElasticUsername != "" {
+	if spec.Username != "" {
 		client, err = elastic.NewClient(
-			elastic.SetURL(spec.ElasticURLs...),
-			elastic.SetBasicAuth(spec.ElasticUsername, spec.ElasticPassword),
+			elastic.SetURL(spec.URLs...),
+			elastic.SetBasicAuth(spec.Username, spec.Password),
 		)
 	} else {
 		client, err = elastic.NewClient(
-			elastic.SetURL(spec.ElasticURLs...),
+			elastic.SetURL(spec.URLs...),
 		)
 	}
 	if err != nil {

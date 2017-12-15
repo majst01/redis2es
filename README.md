@@ -37,24 +37,25 @@ fluent-bit/logstash --> stunnel --> redis <-- redis2es --> elasticsearch
 This application is configured via the environment. The following environment
 variables can be used:
 
-| KEY                      | TYPE                             | DEFAULT                 | REQUIRED   | DESCRIPTION
-|--------------------------|----------------------------------|-------------------------|------------|------------
-| REDIS2ES_KEY             | String                           | logstash                | False      | the redis key where to listen to
-| REDIS2ES_HOST            | String                           | 127.0.0.1               | False      | the redis server host/ip
-| REDIS2ES_PORT            | Integer                          | 6379                    | False      | the redis server port
-| REDIS2ES_DB              | Integer                          | 0                       | False      | the redis database
-| REDIS2ES_PASSWORD        | String                           |                         | False      | the redis password
-| REDIS2ES_USETLS          | True or False                    | false                   | False      | connect to redis using tls
-| REDIS2ES_TLSSKIPVERIFY   | True or False                    | false                   | False      | if connection to redis via tls, skip tls certificate verification
-| REDIS2ES_ELASTICURLS     | Comma-separated list of String   | http://127.0.0.1:9200   | False      | the elasticsearch connection url, separated by comma for many es servers
-| REDIS2ES_ELASTICUSERNAME | String                           |                         | False      | username to connect to elasticsearch
-| REDIS2ES_ELASTICPASSWORD | String                           |                         | False      | password to connect to elasticsearch
-| REDIS2ES_BULKSIZE        | Integer                          | 1000                    | False      | writes to elastic are done in bulks of bulkSize
-| REDIS2ES_BULKTICKER      | Duration                         | 2s                      | False      | duration (go time.Duration format) between bulk writes to elastic
-| REDIS2ES_POOLSIZE        | Integer                          | 2                       | False      | pool of workers to consume redis messages and write to elasticsearch
-| REDIS2ES_ENABLEDFILTERS  | Comma-separated list of String   | catchall,customer       | False      | comma separated list of filters to be used, get a list of available filters with -l
-| REDIS2ES_STATSINTERVAL   | Duration                         | 60s                     | False      | the interval on which bulkprocessor stats should be printed out
-| REDIS2ES_DEBUG           | True or False                    | false                   | False      | turn on debug log
+| KEY                            | TYPE                             | DEFAULT                 | REQUIRED   | DESCRIPTION
+|--------------------------------|----------------------------------|-------------------------|------------|------------
+| REDIS2ES_REDIS_KEY             | String                           | logstash                | False      | the redis key where to listen to
+| REDIS2ES_REDIS_HOST            | String                           | 127.0.0.1               | False      | the redis server host/ip
+| REDIS2ES_REDIS_PORT            | Integer                          | 6379                    | False      | the redis server port
+| REDIS2ES_REDIS_DB              | Integer                          | 0                       | False      | the redis database
+| REDIS2ES_REDIS_PASSWORD        | String                           |                         | False      | the redis password
+| REDIS2ES_REDIS_USETLS          | True or False                    | false                   | False      | connect to redis using tls
+| REDIS2ES_REDIS_TLSSKIPVERIFY   | True or False                    | false                   | False      | if connection to redis via tls, skip tls certificate verification
+| REDIS2ES_ELASTIC_POOLSIZE      | Integer                          | 2                       | False      | pool of workers to consume redis messages
+| REDIS2ES_ELASTIC_URLS          | Comma-separated list of String   | http://127.0.0.1:9200   | False      | the elasticsearch connection url, separated by comma for many es servers
+| REDIS2ES_ELASTIC_USERNAME      | String                           |                         | False      | username to connect to elasticsearch
+| REDIS2ES_ELASTIC_PASSWORD      | String                           |                         | False      | password to connect to elasticsearch
+| REDIS2ES_ELASTIC_BULKSIZE      | Integer                          | 1000                    | False      | writes to elastic are done in bulks of bulkSize
+| REDIS2ES_ELASTIC_BULKTICKER    | Duration                         | 2s                      | False      | duration (go time.Duration format) between bulk writes to elastic
+| REDIS2ES_ELASTIC_POOLSIZE      | Integer                          | 2                       | False      | pool of workers to write to elasticsearch
+| REDIS2ES_ELASTIC_ENABLEDFILTERS| Comma-separated list of String   | catchall,customer       | False      | comma separated list of filters to be used, get a list of available filters with -l
+| REDIS2ES_ELASTIC_STATSINTERVAL | Duration                         | 60s                     | False      | the interval on which bulkprocessor stats should be printed out
+| REDIS2ES_DEBUG                 | True or False                    | false                   | False      | turn on debug log
 
 
 ## Filters

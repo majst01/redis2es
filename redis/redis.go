@@ -19,7 +19,7 @@ type RedisClient struct {
 }
 
 // NewRedisClient create a new instance of a redisClient
-func NewRedisClient(spec config.Specification, ec *elastic.ElasticClient) *RedisClient {
+func NewRedisClient(spec config.Redis, ec *elastic.ElasticClient) *RedisClient {
 	redisPool := newPool(spec.Host, spec.Port, spec.DB, spec.Password, spec.UseTLS, spec.TLSSkipVerify)
 
 	rc := &RedisClient{
