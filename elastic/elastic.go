@@ -75,8 +75,8 @@ func (e *ElasticClient) Index(documents chan Document) {
 }
 
 // Stats periodically spit out BulkProcessor stats.
-func (e *ElasticClient) Stats() {
-	ticker := time.NewTicker(time.Second * 60)
+func (e *ElasticClient) Stats(interval time.Duration) {
+	ticker := time.NewTicker(interval)
 	for {
 		select {
 		case <-ticker.C:

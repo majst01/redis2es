@@ -47,5 +47,5 @@ func main() {
 	}
 
 	// Stay in forground
-	ec.Stats()
+	ec.Stats(spec.StatsInterval)
 }

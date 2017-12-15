@@ -46,11 +46,12 @@ variables can be used:
 | REDIS2ES_PASSWORD        | String                           |                         | False      | the redis password
 | REDIS2ES_USETLS          | True or False                    | false                   | False      | connect to redis using tls
 | REDIS2ES_TLSSKIPVERIFY   | True or False                    | false                   | False      | if connection to redis via tls, skip tls certificate verification
-| REDIS2ES_ELASTICURLS     | Comma-separated list of String   | http://127.0.0.1:9200   | False      | the elasticsearch connection url, seperated by comma for many es servers
+| REDIS2ES_ELASTICURLS     | Comma-separated list of String   | http://127.0.0.1:9200   | False      | the elasticsearch connection url, separated by comma for many es servers
 | REDIS2ES_BULKSIZE        | Integer                          | 1000                    | False      | writes to elastic are done in bulks of bulkSize
 | REDIS2ES_BULKTICKER      | Duration                         | 2s                      | False      | duration (go time.Duration format) between bulk writes to elastic
 | REDIS2ES_POOLSIZE        | Integer                          | 2                       | False      | pool of workers to consume redis messages and write to elasticsearch
-| REDIS2ES_ENABLEDFILTERS  | Comma-separated list of String   | catchall,customer       | False      | comma seperated list of filters to be used, get a list of available filters with -l
+| REDIS2ES_ENABLEDFILTERS  | Comma-separated list of String   | catchall,customer       | False      | comma separated list of filters to be used, get a list of available filters with -l
+| REDIS2ES_STATSINTERVAL   | Duration                         | 60s                     | False      | the interval on which bulkprocessor stats should be printed out
 | REDIS2ES_DEBUG           | True or False                    | false                   | False      | turn on debug log
 
 
