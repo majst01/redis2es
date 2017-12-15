@@ -31,7 +31,7 @@ var (
 	filterGlob = path.Join(filterDirectory, "*"+filterSuffix)
 )
 
-func (e *ElasticClient) loadFilters() {
+func (e *Client) loadFilters() {
 	log.WithFields(log.Fields{"init": "initialize filters"}).Info("loadfilters:")
 
 	filters := []FilterPlugin{}
@@ -81,7 +81,7 @@ func loadFilter(file string) (FilterPlugin, error) {
 }
 
 // isFilterEnabled returns true if this filter is enabled by config.
-func (e *ElasticClient) isFilterEnabled(file string) bool {
+func (e *Client) isFilterEnabled(file string) bool {
 	filtername := getFilterName(file)
 	for _, filtered := range e.enabledFilters {
 		if filtered == filtername {
@@ -116,7 +116,7 @@ func GetFilters() []string {
 }
 
 // ProcessFilter apply all filters enabled to the stream
-func (e *ElasticClient) ProcessFilter(input string) (*filter.Stream, error) {
+func (e *Client) ProcessFilter(input string) (*filter.Stream, error) {
 	start := time.Now()
 	stream := &filter.Stream{
 		JSONContent: input,

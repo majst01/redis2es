@@ -23,10 +23,10 @@ func TestFilter(t *testing.T) {
 	input := "{\"key\":\"value\"}"
 	filters := []FilterPlugin{}
 	filters = append(filters, noopfilter{})
-	e := &ElasticClient{
+	e := &Client{
 		filters: filters,
 	}
-	output, err := e.processFilter(input)
+	output, err := e.ProcessFilter(input)
 	assert.Nil(t, err, "no error is expected")
 	assert.Equal(t, output.IndexName, "", "index must contain catchall")
 	assert.Equal(t, "value", output.MapContent["key"], "expected to have a map representation of json input")
@@ -42,7 +42,7 @@ func TestGetFilterName(t *testing.T) {
 }
 
 func TestIsFilterEnabled(t *testing.T) {
-	e := &ElasticClient{
+	e := &Client{
 		enabledFilters: []string{"noop", "dump"},
 	}
 
@@ -61,12 +61,12 @@ func TestGetFilters(t *testing.T) {
 	require.Nil(t, err)
 	os.OpenFile("lib/test_filter.so", os.O_RDWR|os.O_CREATE, 0755)
 
-	filters := getFilters()
+	filters := GetFilters()
 	assert.True(t, len(filters) == 1, "one filter is expected")
 	assert.Equal(t, "test", filters[0], "testfilter must be present")
 
 	os.OpenFile("lib/noop_filter.so", os.O_RDWR|os.O_CREATE, 0755)
-	filters = getFilters()
+	filters = GetFilters()
 	assert.True(t, len(filters) == 2, "two filter is expected")
 	assert.Equal(t, "noop", filters[0], "noopfilter must be present")
 	assert.Equal(t, "test", filters[1], "testfilter must be present")
@@ -91,11 +91,11 @@ func BenchmarkFilter(b *testing.B) {
 	input := "{\"key\":\"value\", \"Contract\":\"TestContract\"}"
 	filters := []FilterPlugin{}
 	filters = append(filters, noopfilter{})
-	e := &ElasticClient{
+	e := &Client{
 		filters: filters,
 	}
 	for i := 0; i < b.N; i++ {
-		_, err := e.processFilter(input)
+		_, err := e.ProcessFilter(input)
 		if err != nil {
 			assert.Fail(b, "%v", err)
 		}

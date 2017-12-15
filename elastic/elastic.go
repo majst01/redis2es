@@ -11,8 +11,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ElasticClient is used to store data in elasticsearch
-type ElasticClient struct {
+// Client is used to store data in elasticsearch
+type Client struct {
 	client         *elastic.Client
 	bulkProcessor  *elastic.BulkProcessor
 	enabledFilters []string
@@ -25,8 +25,8 @@ type Document struct {
 	Body      string
 }
 
-// NewElasticClient create a new instance of a elasticClient
-func NewElasticClient(spec config.Elastic) *ElasticClient {
+// New create a new instance of a elastic Client
+func New(spec config.Elastic) *Client {
 	var client *elastic.Client
 	var err error
 	if spec.Username != "" {
@@ -60,7 +60,7 @@ func NewElasticClient(spec config.Elastic) *ElasticClient {
 		log.WithFields(log.Fields{"error creating bulkprocessor": err}).Fatal("main:")
 	}
 
-	ec := &ElasticClient{
+	ec := &Client{
 		client:         client,
 		bulkProcessor:  bulk,
 		enabledFilters: spec.EnabledFilters,
@@ -70,13 +70,13 @@ func NewElasticClient(spec config.Elastic) *ElasticClient {
 }
 
 // Close all Elastic resources
-func (e *ElasticClient) Close() {
+func (e *Client) Close() {
 	e.bulkProcessor.Close()
 	e.client.Stop()
 }
 
 // Index a given document from a channel
-func (e *ElasticClient) Index(documents chan Document) {
+func (e *Client) Index(documents chan Document) {
 	for {
 		select {
 		case doc := <-documents:
@@ -92,7 +92,7 @@ func (e *ElasticClient) Index(documents chan Document) {
 }
 
 // Stats periodically spit out BulkProcessor stats.
-func (e *ElasticClient) Stats(interval time.Duration) {
+func (e *Client) Stats(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	for {
 		select {

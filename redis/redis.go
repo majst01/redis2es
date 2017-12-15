@@ -11,18 +11,18 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-// RedisClient is used to read from redis
-type RedisClient struct {
+// Client is used to read from redis
+type Client struct {
 	key  string
 	pool *redis.Pool
-	ec   *elastic.ElasticClient
+	ec   *elastic.Client
 }
 
-// NewRedisClient create a new instance of a redisClient
-func NewRedisClient(spec config.Redis, ec *elastic.ElasticClient) *RedisClient {
+// New create a new instance of a redis Client
+func New(spec config.Redis, ec *elastic.Client) *Client {
 	redisPool := newPool(spec.Host, spec.Port, spec.DB, spec.Password, spec.UseTLS, spec.TLSSkipVerify)
 
-	rc := &RedisClient{
+	rc := &Client{
 		pool: redisPool,
 		key:  spec.Key,
 		ec:   ec,
@@ -66,7 +66,7 @@ func newPool(host string, port int, db int, password string, usetls, tlsskipveri
 	}
 }
 
-func (r *RedisClient) readBlocking() (string, error) {
+func (r *Client) readBlocking() (string, error) {
 	c := r.pool.Get()
 	defer c.Close()
 
@@ -81,7 +81,7 @@ func (r *RedisClient) readBlocking() (string, error) {
 	return result[1], nil
 }
 
-func (r *RedisClient) pending() int {
+func (r *Client) pending() int {
 	c := r.pool.Get()
 	defer c.Close()
 	v, err := redis.Int(c.Do("LLEN", r.key))
@@ -92,7 +92,7 @@ func (r *RedisClient) pending() int {
 }
 
 // Consume logs from redis
-func (r *RedisClient) Consume(documents chan elastic.Document) {
+func (r *Client) Consume(documents chan elastic.Document) {
 	c := r.pool.Get()
 	defer c.Close()
 

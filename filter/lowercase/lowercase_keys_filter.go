@@ -6,13 +6,14 @@ import (
 	"github.com/majst01/redis2es/filter"
 )
 
-type lowercase string
+type lowercaseFilter struct {
+}
 
-func (l lowercase) Name() string {
+func (l lowercaseFilter) Name() string {
 	return "lowercase keys filter"
 }
 
-func (l lowercase) Filter(stream *filter.Stream) error {
+func (l lowercaseFilter) Filter(stream *filter.Stream) error {
 	for k, v := range stream.MapContent {
 		lowerCaseKey := strings.ToLower(k)
 		if lowerCaseKey == k {
@@ -25,4 +26,4 @@ func (l lowercase) Filter(stream *filter.Stream) error {
 }
 
 // FilterPlugin exported symbol makes this plugin usable.
-var FilterPlugin lowercase
+var FilterPlugin lowercaseFilter

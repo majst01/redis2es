@@ -8,7 +8,7 @@ plugins:
 	go build -buildmode=plugin -o lib/lowercase_keys_filter.so filter/lowercase/lowercase_keys_filter.go
 
 test:
-	go test -cover -race -coverprofile=coverage.txt -covermode=atomic
+	go test -v -race -cover $(shell go list ./...)
 
 clean:
 	rm -rf lib redis2es

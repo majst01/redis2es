@@ -34,10 +34,10 @@ func main() {
 	}
 	spec.Log()
 
-	ec := elastic.NewElasticClient(spec.Elastic)
+	ec := elastic.New(spec.Elastic)
 	defer ec.Close()
 
-	rc := redis.NewRedisClient(spec.Redis, ec)
+	rc := redis.New(spec.Redis, ec)
 
 	documents := make(chan elastic.Document, 10)
 	go ec.Index(documents)
