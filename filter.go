@@ -31,7 +31,7 @@ var (
 	filterGlob = path.Join(filterDirectory, "*"+filterSuffix)
 )
 
-func (r *redisClient) loadFilters() {
+func (r *RedisClient) loadFilters() {
 	log.WithFields(log.Fields{"init": "initialize filters"}).Info("loadfilters:")
 
 	filters := []FilterPlugin{}
@@ -81,7 +81,7 @@ func loadFilter(file string) (FilterPlugin, error) {
 }
 
 // isFilterEnabled returns true if this filter is enabled by config.
-func (r *redisClient) isFilterEnabled(file string) bool {
+func (r *RedisClient) isFilterEnabled(file string) bool {
 	filtername := getFilterName(file)
 	for _, filtered := range r.enabledFilters {
 		if filtered == filtername {
@@ -116,7 +116,7 @@ func getFilters() []string {
 }
 
 // processFilter apply all filters enabled to the stream
-func (r *redisClient) processFilter(input string) (*filter.Stream, error) {
+func (r *RedisClient) processFilter(input string) (*filter.Stream, error) {
 	start := time.Now()
 	stream := &filter.Stream{
 		JSONContent: input,

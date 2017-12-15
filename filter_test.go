@@ -23,7 +23,7 @@ func TestFilter(t *testing.T) {
 	input := "{\"key\":\"value\"}"
 	filters := []FilterPlugin{}
 	filters = append(filters, noopfilter{})
-	r := &redisClient{
+	r := &RedisClient{
 		filters: filters,
 	}
 	output, err := r.processFilter(input)
@@ -42,7 +42,7 @@ func TestGetFilterName(t *testing.T) {
 }
 
 func TestIsFilterEnabled(t *testing.T) {
-	r := &redisClient{
+	r := &RedisClient{
 		enabledFilters: []string{"noop", "dump"},
 	}
 
@@ -91,7 +91,7 @@ func BenchmarkFilter(b *testing.B) {
 	input := "{\"key\":\"value\", \"Contract\":\"TestContract\"}"
 	filters := []FilterPlugin{}
 	filters = append(filters, noopfilter{})
-	r := &redisClient{
+	r := &RedisClient{
 		filters: filters,
 	}
 	for i := 0; i < b.N; i++ {

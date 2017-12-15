@@ -41,18 +41,10 @@ func main() {
 		log.SetLevel(log.InfoLevel)
 	}
 
-	redisPool := newPool(spec.Host, spec.Port, spec.DB, spec.Password, spec.UseTLS, spec.TLSSkipVerify)
-
 	ec := NewElasticClient(spec)
 	defer ec.close()
 
-	rc := &redisClient{
-		pool:           redisPool,
-		key:            spec.Key,
-		enabledFilters: spec.EnabledFilters,
-	}
-
-	rc.loadFilters()
+	rc := NewRedisClient(spec)
 
 	for i := 0; i < spec.PoolSize; i++ {
 		documents := make(chan document, 10)
