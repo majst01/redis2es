@@ -68,7 +68,6 @@ func main() {
 	rc := &redisClient{
 		pool:           redisPool,
 		key:            spec.Key,
-		ec:             client,
 		bulkProcessor:  bulk,
 		enabledFilters: spec.EnabledFilters,
 	}

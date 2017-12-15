@@ -13,7 +13,6 @@ import (
 type redisClient struct {
 	key            string
 	pool           *redis.Pool
-	ec             *elastic.Client
 	bulkProcessor  *elastic.BulkProcessor
 	enabledFilters []string
 	filters        []FilterPlugin
