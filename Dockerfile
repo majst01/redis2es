@@ -11,4 +11,4 @@ RUN go get -u github.com/golang/dep/cmd/dep \
 FROM debian:buster-slim
 WORKDIR /redis2es
 COPY --from=builder /redis2es/* /redis2es/
-CMD ["/redis2es/redis2es"]
+ENTRYPOINT ["/redis2es/redis2es"]
