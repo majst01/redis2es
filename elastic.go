@@ -41,7 +41,7 @@ func (r *redisClient) stats() {
 
 			fields := log.Fields{
 				"flushed":   stats.Flushed,
-				"commited":  stats.Committed,
+				"committed": stats.Committed,
 				"indexed":   stats.Indexed,
 				"created":   stats.Created,
 				"updated":   stats.Updated,
