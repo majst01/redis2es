@@ -27,10 +27,10 @@ func (cf customerFilter) Filter(stream *filter.Stream) error {
 			if !ok {
 				return fmt.Errorf("%s is not a string", customer)
 			}
-			oldValue := strings.ToLower(vString)
+			loweredCustomer := strings.ToLower(vString)
 			delete(stream.MapContent, k)
-			stream.MapContent[customer] = oldValue
-			stream.IndexName = fmt.Sprintf("logstash-%s-%d.%d.%d", oldValue, time.Now().Year(), time.Now().Month(), time.Now().Day())
+			stream.MapContent[customer] = loweredCustomer
+			stream.IndexName = fmt.Sprintf("logstash-%s-%d.%d.%d", loweredCustomer, time.Now().Year(), time.Now().Month(), time.Now().Day())
 		}
 	}
 
