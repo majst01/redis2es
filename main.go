@@ -5,6 +5,7 @@ import (
 
 	"github.com/majst01/redis2es/config"
 	"github.com/majst01/redis2es/elastic"
+	"github.com/majst01/redis2es/filter"
 	"github.com/majst01/redis2es/redis"
 
 	"github.com/kelseyhightower/envconfig"
@@ -39,10 +40,10 @@ func main() {
 
 	rc := redis.New(spec.Redis, ec)
 
-	documents := make(chan elastic.Document, 10)
-	go ec.Index(documents)
+	stream := make(chan *filter.Stream, 10)
+	go ec.Index(stream)
 	for i := 0; i < spec.Redis.PoolSize; i++ {
-		go rc.Consume(documents)
+		go rc.Consume(stream)
 	}
 
 	// Stay in forground

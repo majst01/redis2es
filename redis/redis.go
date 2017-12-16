@@ -6,6 +6,7 @@ import (
 
 	"github.com/majst01/redis2es/config"
 	"github.com/majst01/redis2es/elastic"
+	"github.com/majst01/redis2es/filter"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/garyburd/redigo/redis"
@@ -92,7 +93,7 @@ func (r *Client) pending() int {
 }
 
 // Consume logs from redis
-func (r *Client) Consume(documents chan elastic.Document) {
+func (r *Client) Consume(stream chan *filter.Stream) {
 	c := r.pool.Get()
 	defer c.Close()
 
@@ -107,10 +108,10 @@ func (r *Client) Consume(documents chan elastic.Document) {
 			log.WithFields(log.Fields{"err": err}).Error("consume:")
 			continue
 		}
-		doc := elastic.Document{
-			IndexName: filtered.IndexName,
-			Body:      filtered.JSONContent,
+		s := &filter.Stream{
+			IndexName:   filtered.IndexName,
+			JSONContent: filtered.JSONContent,
 		}
-		documents <- doc
+		stream <- s
 	}
 }

@@ -20,12 +20,6 @@ type Client struct {
 	filters        []filter.Plugin
 }
 
-// Document is passed from redis to elastic
-type Document struct {
-	IndexName string
-	Body      string
-}
-
 // New create a new instance of a elastic Client
 func New(spec config.Elastic) *Client {
 	var client *elastic.Client
@@ -77,17 +71,17 @@ func (e *Client) Close() {
 }
 
 // Index a given document from a channel
-func (e *Client) Index(documents chan Document) {
+func (e *Client) Index(stream chan *filter.Stream) {
 	for {
 		select {
-		case doc := <-documents:
-			log.WithFields(log.Fields{"doc": doc}).Debug("index:")
+		case s := <-stream:
+			log.WithFields(log.Fields{"stream": s}).Debug("index:")
 
 			id := uuid.New().String()
-			request := elastic.NewBulkIndexRequest().Index(doc.IndexName).Type("log").Id(id).Doc(doc.Body)
+			request := elastic.NewBulkIndexRequest().Index(s.IndexName).Type("log").Id(id).Doc(s.JSONContent)
 			e.bulkProcessor.Add(request)
 
-			log.WithFields(log.Fields{"id": id, "index": doc.IndexName}).Debug("index:")
+			log.WithFields(log.Fields{"id": id, "index": s.IndexName}).Debug("index:")
 		}
 	}
 }
