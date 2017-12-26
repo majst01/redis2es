@@ -35,13 +35,14 @@ func New(spec config.Elastic) *Client {
 		)
 	}
 	if err != nil {
-		log.WithFields(log.Fields{"error connecting to elastic": err}).Error("main:")
+		log.WithFields(log.Fields{"elastic client creation with error": err}).Error("main:")
 	}
-	nodesInfo, err := client.NodesInfo().Do(context.Background())
-	if err != nil {
-		log.WithFields(log.Fields{"error reading nodesInfo from elastic": err}).Error("main:")
-	}
-	log.WithFields(log.Fields{"elasticsearch.ClusterName": nodesInfo.ClusterName}).Info("main:")
+	// FIXME this must be run in Background and must not panic if es is unavailable
+	//	nodesInfo, err := client.NodesInfo().Do(context.Background())
+	//	if err != nil {
+	//		log.WithFields(log.Fields{"error reading nodesInfo from elastic": err}).Error("main:")
+	//	}
+	//	log.WithFields(log.Fields{"elasticsearch.ClusterName": nodesInfo.ClusterName}).Info("main:")
 
 	bulk, err := client.BulkProcessor().
 		Name("BackgroundWorker-1").
