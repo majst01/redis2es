@@ -31,6 +31,7 @@ func (cf customerFilter) Filter(stream *filter.Stream) error {
 			delete(stream.MapContent, k)
 			stream.MapContent[customer] = loweredCustomer
 			stream.IndexName = fmt.Sprintf("logstash-%s-%d.%d.%d", loweredCustomer, time.Now().Year(), time.Now().Month(), time.Now().Day())
+			break
 		}
 	}
 
