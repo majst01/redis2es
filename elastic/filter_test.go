@@ -15,7 +15,7 @@ type noopfilter struct {
 func (n noopfilter) Name() string {
 	return "NOOP"
 }
-func (n noopfilter) Filter(stream *filter.Stream) error {
+func (n noopfilter) Filter(stream *filter.Stream, indexPrefix string) error {
 	return nil
 }
 
