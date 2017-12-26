@@ -4,5 +4,5 @@ package filter
 // to a output map or errors out.
 type Plugin interface {
 	Name() string
-	Filter(input *Stream) error
+	Filter(input *Stream, indexPrefix string) error
 }

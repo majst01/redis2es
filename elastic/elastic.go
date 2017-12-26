@@ -18,6 +18,7 @@ type Client struct {
 	bulkProcessor  *elastic.BulkProcessor
 	enabledFilters []string
 	filters        []filter.Plugin
+	indexPrefix    string
 }
 
 // New create a new instance of a elastic Client
@@ -60,6 +61,7 @@ func New(spec config.Elastic) *Client {
 		client:         client,
 		bulkProcessor:  bulk,
 		enabledFilters: spec.EnabledFilters,
+		indexPrefix:    spec.IndexPrefix,
 	}
 	ec.loadFilters()
 	return ec

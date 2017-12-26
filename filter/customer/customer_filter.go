@@ -20,7 +20,7 @@ func (cf customerFilter) Name() string {
 }
 
 // Filter required to be a filter.Plugin
-func (cf customerFilter) Filter(stream *filter.Stream) error {
+func (cf customerFilter) Filter(stream *filter.Stream, indexPrefix string) error {
 	for k, v := range stream.MapContent {
 		if strings.ToLower(k) == customer {
 			vString, ok := v.(string)
@@ -30,7 +30,7 @@ func (cf customerFilter) Filter(stream *filter.Stream) error {
 			loweredCustomer := strings.ToLower(vString)
 			delete(stream.MapContent, k)
 			stream.MapContent[customer] = loweredCustomer
-			stream.IndexName = fmt.Sprintf("logstash-%s-%d.%d.%d", loweredCustomer, time.Now().Year(), time.Now().Month(), time.Now().Day())
+			stream.IndexName = fmt.Sprintf("%s-%s-%d.%d.%d", indexPrefix, loweredCustomer, time.Now().Year(), time.Now().Month(), time.Now().Day())
 			break
 		}
 	}

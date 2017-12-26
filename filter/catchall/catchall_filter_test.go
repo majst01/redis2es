@@ -12,7 +12,7 @@ func TestFilter(t *testing.T) {
 	cf := catchallFilter{}
 
 	stream := &filter.Stream{}
-	err := cf.Filter(stream)
+	err := cf.Filter(stream, "logstash")
 	require.Nil(t, err, "error is expected to be nil")
 	assert.Contains(t, stream.IndexName, "index-catchall-20", "catchall is expexted in the indexname")
 }

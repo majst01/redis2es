@@ -13,7 +13,7 @@ func (c catchallFilter) Name() string {
 	return "catchall index filter"
 }
 
-func (c catchallFilter) Filter(stream *filter.Stream) error {
+func (c catchallFilter) Filter(stream *filter.Stream, indexPrefix string) error {
 	stream.IndexName = fmt.Sprintf("index-catchall-%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day())
 	return nil
 }

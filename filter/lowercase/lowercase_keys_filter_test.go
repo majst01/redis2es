@@ -15,7 +15,7 @@ func TestLowerCaseFilter(t *testing.T) {
 	}
 	err := stream.Unmarshal()
 
-	err = lc.Filter(stream)
+	err = lc.Filter(stream, "logstash")
 
 	assert.Nil(t, err, "no error is expected")
 	assert.Equal(t, "value", stream.MapContent["key"], "output may never be empty")

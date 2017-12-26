@@ -55,6 +55,7 @@ variables can be used:
 | REDIS2ES_ELASTIC_POOLSIZE      | Integer                          | 2                       | False      | pool of workers to write to elasticsearch
 | REDIS2ES_ELASTIC_ENABLEDFILTERS| Comma-separated list of String   | catchall,customer       | False      | comma separated list of filters to be used, get a list of available filters with -l
 | REDIS2ES_ELASTIC_STATSINTERVAL | Duration                         | 60s                     | False      | the interval on which bulkprocessor stats should be printed out
+| REDIS2ES_ELASTIC_INDEXPREFIX   | String                           | logstash                | False      | the prefix to be used for indexes
 | REDIS2ES_DEBUG                 | True or False                    | false                   | False      | turn on debug log
 
 

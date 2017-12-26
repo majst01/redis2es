@@ -127,7 +127,7 @@ func (e *Client) ProcessFilter(input string) (*filter.Stream, error) {
 	for _, f := range e.filters {
 		s := time.Now()
 		log.WithFields(log.Fields{"call filter:": f.Name()}).Debug("filter:")
-		err = f.Filter(stream)
+		err = f.Filter(stream, e.indexPrefix)
 		if err != nil {
 			log.WithFields(log.Fields{"error": err}).Error("filter:")
 		}

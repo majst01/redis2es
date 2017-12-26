@@ -28,6 +28,7 @@ type Elastic struct {
 	PoolSize       int           `default:"2" desc:"pool of workers to write to elasticsearch" required:"False"`
 	EnabledFilters []string      `default:"catchall,customer" desc:"comma separated list of filters to be used, get a list of availablefilters with -l" required:"False"`
 	StatsInterval  time.Duration `default:"60s" desc:"the interval on which bulkprocessor stats should be printed out" required:"False"`
+	IndexPrefix    string        `default:"logstash" desc:"the prefix to be used for indexes" required:"False"`
 }
 
 // Specification of all configuration needed.
@@ -56,6 +57,7 @@ func (s *Specification) Log() {
 		"elastic.poolsize":       s.Elastic.PoolSize,
 		"elastic.enabledfilters": s.Elastic.EnabledFilters,
 		"elastic.statsinterval":  s.Elastic.StatsInterval,
+		"elastic.indexprefix":    s.Elastic.IndexPrefix,
 		"debug":                  s.Debug,
 	}).Info("config:")
 }

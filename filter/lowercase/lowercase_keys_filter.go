@@ -13,7 +13,7 @@ func (l lowercaseFilter) Name() string {
 	return "lowercase keys filter"
 }
 
-func (l lowercaseFilter) Filter(stream *filter.Stream) error {
+func (l lowercaseFilter) Filter(stream *filter.Stream, indexPrefix string) error {
 	for k, v := range stream.MapContent {
 		lowerCaseKey := strings.ToLower(k)
 		if lowerCaseKey == k {
