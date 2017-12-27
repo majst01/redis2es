@@ -123,7 +123,6 @@ func (e *Client) ProcessFilter(input string) (*filter.Stream, error) {
 		return stream, err
 	}
 
-	// check if contract in any case is present, lowercase then
 	for _, f := range e.filters {
 		s := time.Now()
 		log.WithFields(log.Fields{"call filter:": f.Name()}).Debug("filter:")
