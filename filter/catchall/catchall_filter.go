@@ -14,7 +14,7 @@ func (c catchallFilter) Name() string {
 }
 
 func (c catchallFilter) Filter(stream *filter.Stream, indexPrefix string) error {
-	stream.IndexName = fmt.Sprintf("index-catchall-%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day())
+	stream.IndexName = fmt.Sprintf("%s-catchall-%d-%d-%d", indexPrefix, time.Now().Year(), time.Now().Month(), time.Now().Day())
 	return nil
 }
 
