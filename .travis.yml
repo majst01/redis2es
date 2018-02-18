@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.9
+  - "1.10"
 
 script:
   - go get -u github.com/golang/dep/cmd/dep
@@ -10,4 +10,3 @@ script:
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-

@@ -1,4 +1,4 @@
-FROM golang:1.9 AS builder
+FROM golang:1.10 AS builder
 
 COPY . /go/src/github.com/majst01/redis2es/
 WORKDIR /go/src/github.com/majst01/redis2es/
